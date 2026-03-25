@@ -44,7 +44,7 @@ export function updateFxChain(chain: TrackFxChain, fx: FxParams, volume: number,
   }
 
   chain.volume.volume.value = Tone.gainToDb(volume / 100);
-  chain.panner.pan.value = pan;
+  chain.panner.pan.value = Math.max(-1, Math.min(1, isFinite(pan) ? pan : 0));
 }
 
 export function disposeFxChain(chain: TrackFxChain): void {
