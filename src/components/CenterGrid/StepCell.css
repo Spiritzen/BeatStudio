@@ -1,0 +1,35 @@
+.step-cell {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  cursor: pointer;
+  transition: transform 0.05s, box-shadow 0.05s;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.step-cell.bar-line {
+  margin-left: 4px;
+}
+
+.step-cell.off:hover:not(.disabled) {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--text-muted);
+}
+
+.step-cell.on {
+  /* color set inline */
+}
+
+.step-cell.playing {
+  transform: scale(1.12);
+  z-index: 2;
+}
+
+.step-cell.disabled {
+  opacity: 0.2;
+  cursor: default;
+  pointer-events: none;
+}

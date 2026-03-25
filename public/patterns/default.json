@@ -1,0 +1,57 @@
+{
+  "version": "1.0.0",
+  "name": "default",
+  "bpm": 120,
+  "globalSteps": 32,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "tracks": [
+    {
+      "id": "d1", "name": "Kick", "color": "#f59e0b", "instrument": "Kick",
+      "steps": [true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false],
+      "volume": 85, "pan": 0, "muted": false, "soloed": false,
+      "fx": { "reverb": {"enabled":false,"wet":0.2}, "delay": {"enabled":false,"wet":0.2}, "distortion": {"enabled":false,"wet":0.2}, "filter": {"enabled":false,"frequency":1000,"type":"lowpass"} }
+    },
+    {
+      "id": "d2", "name": "Snare", "color": "#ef4444", "instrument": "Snare",
+      "steps": [false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false],
+      "volume": 80, "pan": 0, "muted": false, "soloed": false,
+      "fx": { "reverb": {"enabled":false,"wet":0.2}, "delay": {"enabled":false,"wet":0.2}, "distortion": {"enabled":false,"wet":0.2}, "filter": {"enabled":false,"frequency":1000,"type":"lowpass"} }
+    },
+    {
+      "id": "d3", "name": "Hi-Hat", "color": "#10b981", "instrument": "HiHat",
+      "steps": [true,false,true,false,true,false,true,false,true,false,true,false,true,false,true,false,true,false,true,false,true,false,true,false,true,false,true,false,true,false,true,false],
+      "volume": 65, "pan": 0, "muted": false, "soloed": false,
+      "fx": { "reverb": {"enabled":false,"wet":0.2}, "delay": {"enabled":false,"wet":0.2}, "distortion": {"enabled":false,"wet":0.2}, "filter": {"enabled":false,"frequency":1000,"type":"lowpass"} }
+    },
+    {
+      "id": "d4", "name": "Open Hat", "color": "#06b6d4", "instrument": "OpenHat",
+      "steps": [false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false],
+      "volume": 60, "pan": 0, "muted": false, "soloed": false,
+      "fx": { "reverb": {"enabled":true,"wet":0.2}, "delay": {"enabled":false,"wet":0.2}, "distortion": {"enabled":false,"wet":0.2}, "filter": {"enabled":false,"frequency":1000,"type":"lowpass"} }
+    },
+    {
+      "id": "d5", "name": "Clap", "color": "#ec4899", "instrument": "Clap",
+      "steps": [false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false],
+      "volume": 75, "pan": 0, "muted": false, "soloed": false,
+      "fx": { "reverb": {"enabled":true,"wet":0.3}, "delay": {"enabled":false,"wet":0.2}, "distortion": {"enabled":false,"wet":0.2}, "filter": {"enabled":false,"frequency":1000,"type":"lowpass"} }
+    },
+    {
+      "id": "d6", "name": "Bass", "color": "#7c3aed", "instrument": "Bass Synth",
+      "steps": [true,false,false,false,false,false,true,false,false,false,false,false,true,false,false,false,true,false,false,false,false,false,true,false,false,false,false,false,true,false,false,false],
+      "volume": 80, "pan": 0, "muted": false, "soloed": false,
+      "fx": { "reverb": {"enabled":false,"wet":0.2}, "delay": {"enabled":false,"wet":0.2}, "distortion": {"enabled":false,"wet":0.2}, "filter": {"enabled":false,"frequency":800,"type":"lowpass"} }
+    },
+    {
+      "id": "d7", "name": "Lead", "color": "#3b82f6", "instrument": "Lead Synth",
+      "steps": [false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false],
+      "volume": 70, "pan": 5, "muted": false, "soloed": false,
+      "fx": { "reverb": {"enabled":true,"wet":0.3}, "delay": {"enabled":true,"wet":0.2}, "distortion": {"enabled":false,"wet":0.2}, "filter": {"enabled":false,"frequency":1000,"type":"lowpass"} }
+    },
+    {
+      "id": "d8", "name": "Pad", "color": "#8b5cf6", "instrument": "Pad",
+      "steps": [true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+      "volume": 60, "pan": -5, "muted": false, "soloed": false,
+      "fx": { "reverb": {"enabled":true,"wet":0.5}, "delay": {"enabled":false,"wet":0.2}, "distortion": {"enabled":false,"wet":0.2}, "filter": {"enabled":false,"frequency":1000,"type":"lowpass"} }
+    }
+  ]
+}

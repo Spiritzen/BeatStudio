@@ -1,0 +1,47 @@
+.instrument-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.instr-category {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.instr-cat-label {
+  padding-bottom: 2px;
+}
+
+.instr-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+}
+
+.instr-btn {
+  padding: 5px 8px;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  transition: all 0.12s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.instr-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.instr-btn.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}

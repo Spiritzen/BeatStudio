@@ -1,0 +1,200 @@
+import { useEffect, useRef, useCallback, useState } from 'react';
+import * as Tone from 'tone';
+import type { Track, InstrumentName } from '../types';
+import { createSynth, getTriggerNote, isNoiseBased } from '../utils/synths';
+import { createFxChain, updateFxChain, disposeFxChain, type TrackFxChain } from '../utils/effects';
+
+type AnyToneInstrument =
+  | Tone.MembraneSynth
+  | Tone.NoiseSynth
+  | Tone.Synth
+  | Tone.MetalSynth
+  | Tone.PolySynth
+  | Tone.PluckSynth;
+
+interface TrackNode {
+  synth: AnyToneInstrument;
+  player: Tone.Player | null;
+  fx: TrackFxChain;
+}
+
+function triggerInstrument(synth: AnyToneInstrument, instrument: InstrumentName, time: number): void {
+  if (isNoiseBased(instrument)) {
+    (synth as Tone.NoiseSynth).triggerAttackRelease('16n', time);
+  } else if (synth instanceof Tone.PolySynth) {
+    (synth as Tone.PolySynth).triggerAttackRelease(['C3', 'E3', 'G3'], '8n', time);
+  } else if (synth instanceof Tone.PluckSynth) {
+    (synth as Tone.PluckSynth).triggerAttack(getTriggerNote(instrument), time);
+  } else if (synth instanceof Tone.MembraneSynth || synth instanceof Tone.MetalSynth) {
+    (synth as Tone.MembraneSynth).triggerAttackRelease(getTriggerNote(instrument), '8n', time);
+  } else {
+    const duration = ['Pad', 'Organ', 'Sweep', 'Riser'].includes(instrument) ? '4n' : '16n';
+    (synth as Tone.Synth).triggerAttackRelease(getTriggerNote(instrument), duration, time);
+  }
+}
+
+export function useSequencer(tracks: Track[], bpm: number, globalSteps: number, mode: 'tone' | 'sample') {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentStep, setCurrentStep] = useState(-1);
+  const audioStarted = useRef(false);
+  const sequenceRef = useRef<Tone.Sequence | null>(null);
+  const trackNodesRef = useRef<Map<string, TrackNode>>(new Map());
+  const tracksRef = useRef<Track[]>(tracks);
+  const modeRef = useRef(mode);
+  const isPlayingRef = useRef(false);
+
+  // Keep refs in sync
+  useEffect(() => { tracksRef.current = tracks; }, [tracks]);
+  useEffect(() => { modeRef.current = mode; }, [mode]);
+  useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
+
+  // Sync BPM
+  useEffect(() => {
+    Tone.getTransport().bpm.value = bpm;
+  }, [bpm]);
+
+  // Update FX/mute on track changes
+  useEffect(() => {
+    const currentIds = new Set(tracks.map(t => t.id));
+    for (const [id, node] of trackNodesRef.current) {
+      if (!currentIds.has(id)) {
+        node.synth.dispose();
+        node.player?.dispose();
+        disposeFxChain(node.fx);
+        trackNodesRef.current.delete(id);
+      }
+    }
+    const hasSolo = tracks.some(t => t.soloed);
+    for (const track of tracks) {
+      const node = trackNodesRef.current.get(track.id);
+      if (node) {
+        updateFxChain(node.fx, track.fx, track.volume, track.pan);
+        node.fx.channel.mute = track.muted || (hasSolo && !track.soloed);
+      }
+    }
+  }, [tracks]);
+
+  const ensureNodes = useCallback(() => {
+    for (const track of tracksRef.current) {
+      if (!trackNodesRef.current.has(track.id)) {
+        const fx = createFxChain();
+        const synth = createSynth(track.instrument);
+        synth.connect(fx.distortion);
+        let player: Tone.Player | null = null;
+        if (track.sampleUrl) {
+          player = new Tone.Player(track.sampleUrl).connect(fx.distortion);
+        }
+        updateFxChain(fx, track.fx, track.volume, track.pan);
+        trackNodesRef.current.set(track.id, { synth, player, fx });
+      }
+    }
+  }, []);
+
+  const buildAndStartSequence = useCallback((steps: number) => {
+    // Stop and dispose existing sequence
+    if (sequenceRef.current) {
+      sequenceRef.current.stop();
+      sequenceRef.current.dispose();
+      sequenceRef.current = null;
+    }
+    Tone.getTransport().stop();
+    Tone.getTransport().position = 0;
+
+    const stepIndices = Array.from({ length: steps }, (_, i) => i);
+
+    const sequence = new Tone.Sequence(
+      (time, stepIndex) => {
+        const currentTracks = tracksRef.current;
+        const hasSolo = currentTracks.some(t => t.soloed);
+
+        Tone.getDraw().schedule(() => {
+          setCurrentStep(stepIndex as number);
+        }, time);
+
+        for (const track of currentTracks) {
+          if (!track.steps[stepIndex as number]) continue;
+          const shouldMute = track.muted || (hasSolo && !track.soloed);
+          if (shouldMute) continue;
+
+          const node = trackNodesRef.current.get(track.id);
+          if (!node) continue;
+
+          if (modeRef.current === 'sample' && node.player && track.sampleUrl) {
+            node.player.start(time);
+          } else {
+            try {
+              triggerInstrument(node.synth, track.instrument, time);
+            } catch {}
+          }
+        }
+      },
+      stepIndices,
+      '16n'
+    );
+
+    sequence.start(0);
+    Tone.getTransport().start();
+    sequenceRef.current = sequence;
+  }, []);
+
+  // Rebuild sequence when globalSteps changes while playing
+  useEffect(() => {
+    if (isPlayingRef.current) {
+      ensureNodes();
+      buildAndStartSequence(globalSteps);
+    }
+  }, [globalSteps, ensureNodes, buildAndStartSequence]);
+
+  const startAudio = useCallback(async () => {
+    if (!audioStarted.current) {
+      await Tone.start();
+      audioStarted.current = true;
+    }
+  }, []);
+
+  const play = useCallback(async () => {
+    await startAudio();
+    ensureNodes();
+    buildAndStartSequence(globalSteps);
+    setIsPlaying(true);
+    setCurrentStep(0);
+  }, [globalSteps, startAudio, ensureNodes, buildAndStartSequence]);
+
+  const stop = useCallback(() => {
+    Tone.getTransport().stop();
+    if (sequenceRef.current) {
+      sequenceRef.current.stop();
+      sequenceRef.current.dispose();
+      sequenceRef.current = null;
+    }
+    setIsPlaying(false);
+    setCurrentStep(-1);
+  }, []);
+
+  const togglePlay = useCallback(async () => {
+    if (isPlayingRef.current) {
+      stop();
+    } else {
+      await play();
+    }
+  }, [play, stop]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (sequenceRef.current) {
+        sequenceRef.current.stop();
+        sequenceRef.current.dispose();
+      }
+      Tone.getTransport().stop();
+      for (const node of trackNodesRef.current.values()) {
+        node.synth.dispose();
+        node.player?.dispose();
+        disposeFxChain(node.fx);
+      }
+      trackNodesRef.current.clear();
+    };
+  }, []);
+
+  return { isPlaying, currentStep, togglePlay, play, stop };
+}

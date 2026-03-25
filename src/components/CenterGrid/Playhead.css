@@ -1,0 +1,20 @@
+.playhead {
+  position: absolute;
+  width: 2px;
+  bottom: 0;
+  background: var(--accent-orange);
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 0 6px var(--accent-orange), 0 0 12px var(--accent-orange)60;
+  transition: left 0.04s linear;
+}
+
+.playhead::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -4px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--accent-orange);
+}
