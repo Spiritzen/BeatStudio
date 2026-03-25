@@ -4,6 +4,7 @@ import { LeftPanel } from './components/LeftPanel/LeftPanel';
 import { CenterGrid } from './components/CenterGrid/CenterGrid';
 import { RightPanel } from './components/RightPanel/RightPanel';
 import { Footer } from './components/Footer';
+import { WelcomeModal } from './components/WelcomeModal';
 import { usePattern } from './hooks/usePattern';
 import { useSequencer } from './hooks/useSequencer';
 import type { Track, InstrumentName } from './types';
@@ -13,6 +14,7 @@ import './App.css';
 export default function App() {
   const [mode, setMode] = useState<'tone' | 'sample'>('tone');
   const [zoom, setZoom] = useState(1);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const handleZoomChange = (val: number) => {
     setZoom(Math.round(Math.max(0.5, Math.min(2, val)) * 10) / 10);
@@ -29,6 +31,18 @@ export default function App() {
     savePattern, loadPattern, exportPattern,
     toggleMute, toggleSolo,
   } = usePattern();
+
+  const handleDemo = () => setShowWelcome(false);
+
+  const handleNew = () => {
+    loadPattern({ version: '1.0.0', bpm: 120, globalSteps: 16, tracks: [], createdAt: new Date().toISOString() });
+    setShowWelcome(false);
+  };
+
+  const handleLoad = (pattern: any) => {
+    loadPattern(pattern);
+    setShowWelcome(false);
+  };
 
   const { isPlaying, currentStep, togglePlay } = useSequencer(tracks, bpm, globalSteps, mode);
 
@@ -69,6 +83,14 @@ export default function App() {
   }, [togglePlay, undo, savePattern, selectedTrackId, duplicateTrack, toggleMute]);
 
   return (
+    <>
+      {showWelcome && (
+        <WelcomeModal
+          onDemo={handleDemo}
+          onNew={handleNew}
+          onLoad={handleLoad}
+        />
+      )}
     <div className="app">
       <TopBar
         isPlaying={isPlaying}
@@ -121,5 +143,6 @@ export default function App() {
 
       <Footer zoom={zoom} onZoomChange={handleZoomChange} />
     </div>
+    </>
   );
 }
