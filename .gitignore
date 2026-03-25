@@ -1,0 +1,76 @@
+# ============================================================
+# BeatStudio — .gitignore
+# React + TypeScript + Vite
+# ============================================================
+
+# ── Dépendances ──────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Build ────────────────────────────────────────────────────
+dist/
+dist-ssr/
+build/
+
+# ── Cache Vite ───────────────────────────────────────────────
+.vite/
+*.local
+
+# ── Variables d'environnement / Secrets ──────────────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ── Claude Code / IA config ──────────────────────────────────
+.claude/
+.claude
+CLAUDE.md
+claude.json
+.claudeignore
+
+# ── Éditeurs ─────────────────────────────────────────────────
+.vscode/settings.json
+.vscode/launch.json
+.vscode/*.code-snippets
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── Logs ─────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── Tests ────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── TypeScript ───────────────────────────────────────────────
+*.tsbuildinfo
+
+# ── OS ───────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+Thumbs.db
+
+# ── Déploiement ──────────────────────────────────────────────
+# dist/ est généré par npm run build — GitHub Actions s'en charge
+
+# ── Données versionnées intentionnellement ───────────────────
+# public/images/CV_Sebastien_Cantrelle.pdf  → versionné ✅
+# public/patterns/default.json              → versionné ✅
