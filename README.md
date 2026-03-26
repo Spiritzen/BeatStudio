@@ -220,6 +220,13 @@ Le pattern exporté est un fichier JSON lisible et portable, **effets inclus** :
 
 ## 📋 Changelog
 
+### v1.1.2 — Piano virtuel + Modale d'accueil
+- ✨ Instrument Piano avec clavier virtuel 4 octaves (C1 → B4)
+- ✨ Zone piano fixe en bas de la grille au clic sur un step
+- ✨ Assignation de notes via clavier virtuel ou clavier physique (A-Z)
+- ✨ Modale d'accueil — Démo / Nouveau projet / Ouvrir un projet
+- 🐛 Fix sanitize pan value (must be within [-1, 1])
+
 ### v1.0.0 — Initial Release
 - ✨ Step sequencer 8 pistes × 32 steps (longueur globale 8–256)
 - ✨ 26 instruments synthétiques Tone.js (Percussions · Mélodique · FX)

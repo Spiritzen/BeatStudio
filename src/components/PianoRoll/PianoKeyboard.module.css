@@ -1,0 +1,126 @@
+.pianoZone {
+  height: 148px;
+  background: #13131f;
+  border-top: 1px solid #2e2e4a;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.pianoHeader {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-bottom: 1px solid #2e2e4a;
+  flex-shrink: 0;
+}
+
+.pianoTitle {
+  font-size: 11px;
+  color: #9090b0;
+  font-weight: 500;
+}
+
+.currentNote {
+  color: #7c3aed;
+  font-weight: 700;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clearBtn {
+  background: none;
+  border: 1px solid #2e2e4a;
+  color: #9090b0;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.clearBtn:hover { border-color: #ef4444; color: #ef4444; }
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: #55556a;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+}
+.closeBtn:hover { color: #e2e2f0; background: #252538; }
+
+.keyboard {
+  display: flex;
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 12px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #2e2e4a transparent;
+  gap: 2px;
+}
+
+.keyboard::-webkit-scrollbar { height: 4px; }
+.keyboard::-webkit-scrollbar-thumb { background: #2e2e4a; border-radius: 2px; }
+
+.octave {
+  /* dimensions set via inline style */
+}
+
+.key {
+  border: none;
+  cursor: pointer;
+  border-radius: 0 0 4px 4px;
+  transition: background 0.08s, filter 0.08s;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4px;
+  user-select: none;
+}
+
+.white {
+  background: #dcdcec;
+  border: 1px solid #44445a;
+  z-index: 1;
+  box-sizing: border-box;
+}
+.white:hover { background: #c0c0dc; }
+.white.active { background: #7c3aed; border-color: #7c3aed; }
+
+.black {
+  background: #18182c;
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  z-index: 2;
+}
+.black:hover { background: #282848; }
+.black.active { background: #7c3aed; border-color: #7c3aed; }
+
+.keyLabel {
+  font-size: 7px;
+  color: #55556a;
+  user-select: none;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  line-height: 1;
+}
+.white.active .keyLabel { color: rgba(255,255,255,0.8); }
+
+.hint {
+  font-size: 9px;
+  color: #3a3a55;
+  text-align: center;
+  padding: 3px 0 4px;
+  margin: 0;
+  flex-shrink: 0;
+}

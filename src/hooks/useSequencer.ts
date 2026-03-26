@@ -112,19 +112,29 @@ export function useSequencer(tracks: Track[], bpm: number, globalSteps: number, 
         }, time);
 
         for (const track of currentTracks) {
-          if (!track.steps[stepIndex as number]) continue;
           const shouldMute = track.muted || (hasSolo && !track.soloed);
-          if (shouldMute) continue;
 
-          const node = trackNodesRef.current.get(track.id);
-          if (!node) continue;
-
-          if (modeRef.current === 'sample' && node.player && track.sampleUrl) {
-            node.player.start(time);
-          } else {
+          if (track.pianoSteps) {
+            // Piano track — joue la note assignée au step
+            const pianoStep = track.pianoSteps[stepIndex as number];
+            if (!pianoStep?.active || !pianoStep.note || shouldMute) continue;
+            const node = trackNodesRef.current.get(track.id);
+            if (!node) continue;
             try {
-              triggerInstrument(node.synth, track.instrument, time);
+              (node.synth as Tone.PolySynth).triggerAttackRelease(pianoStep.note, '8n', time);
             } catch {}
+          } else {
+            // Piste normale
+            if (!track.steps[stepIndex as number] || shouldMute) continue;
+            const node = trackNodesRef.current.get(track.id);
+            if (!node) continue;
+            if (modeRef.current === 'sample' && node.player && track.sampleUrl) {
+              node.player.start(time);
+            } else {
+              try {
+                triggerInstrument(node.synth, track.instrument, time);
+              } catch {}
+            }
           }
         }
       },

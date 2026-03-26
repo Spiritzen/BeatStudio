@@ -1,10 +1,16 @@
 export type InstrumentName =
+  | 'Piano'
   | 'Kick' | 'Snare' | 'Clap' | 'HiHat' | 'OpenHat'
   | 'Tom Hi' | 'Tom Mid' | 'Tom Floor' | 'Rimshot' | 'Cowbell'
   | 'Tambourine' | 'Conga'
   | 'Bass Synth' | 'Lead Synth' | 'Pad' | 'Pluck' | 'Bell'
   | 'Marimba' | 'Organ' | 'Flute'
   | 'Noise' | 'Zap' | 'Laser' | 'Sweep' | 'Boom' | 'Riser';
+
+export interface PianoStep {
+  active: boolean;
+  note: string;
+}
 
 export interface FxParams {
   reverb: { enabled: boolean; wet: number };
@@ -24,6 +30,7 @@ export interface Track {
   muted: boolean;
   soloed: boolean;
   fx: FxParams;
+  pianoSteps?: PianoStep[];
   sampleUrl?: string;
   sampleName?: string;
 }
@@ -53,6 +60,7 @@ export const TRACK_COLORS = [
 ];
 
 export const INSTRUMENT_CATEGORIES: Record<string, InstrumentName[]> = {
+  'Piano': ['Piano'],
   'Percussions': ['Kick', 'Snare', 'Clap', 'HiHat', 'OpenHat', 'Tom Hi', 'Tom Mid', 'Tom Floor', 'Rimshot', 'Cowbell', 'Tambourine', 'Conga'],
   'Mélodique': ['Bass Synth', 'Lead Synth', 'Pad', 'Pluck', 'Bell', 'Marimba', 'Organ', 'Flute'],
   'FX': ['Noise', 'Zap', 'Laser', 'Sweep', 'Boom', 'Riser'],

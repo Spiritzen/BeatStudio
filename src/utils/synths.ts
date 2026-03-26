@@ -180,6 +180,13 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
         envelope: { attack: 1.0, decay: 0.5, sustain: 0.7, release: 0.5 },
       });
 
+    case 'Piano':
+      return new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.02, decay: 0.3, sustain: 0.4, release: 1.2 },
+        volume: -6,
+      });
+
     default:
       return new Tone.Synth();
   }

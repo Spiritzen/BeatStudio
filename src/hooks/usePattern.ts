@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { Track, InstrumentName, Pattern } from '../types';
+import type { Track, InstrumentName, Pattern, PianoStep } from '../types';
 import { TRACK_COLORS } from '../types';
 
 const DEFAULT_STEPS = 16;
@@ -13,6 +13,17 @@ function resizePattern(pattern: boolean[], newSize: number): boolean[] {
     return [...pattern, ...Array(newSize - pattern.length).fill(false)];
   }
   return pattern.slice(0, newSize);
+}
+
+function resizePianoSteps(steps: PianoStep[], newSize: number): PianoStep[] {
+  if (newSize > steps.length) {
+    return [...steps, ...Array(newSize - steps.length).fill(null).map(() => ({ active: false, note: '' }))];
+  }
+  return steps.slice(0, newSize);
+}
+
+function makePianoSteps(count: number): PianoStep[] {
+  return Array(count).fill(null).map(() => ({ active: false, note: '' }));
 }
 
 function createDefaultTrack(id: string, name: string, instrument: InstrumentName, color: string, steps = DEFAULT_STEPS): Track {
@@ -32,6 +43,7 @@ function createDefaultTrack(id: string, name: string, instrument: InstrumentName
       distortion: { enabled: false, wet: 0.3 },
       filter: { enabled: false, frequency: 1000, type: 'lowpass' },
     },
+    ...(instrument === 'Piano' ? { pianoSteps: makePianoSteps(steps) } : {}),
   };
 }
 
@@ -118,7 +130,11 @@ export function usePattern() {
     const snapped = snapTo4(val);
     setGlobalSteps(snapped);
     setTracks(prev => {
-      const next = prev.map(t => ({ ...t, steps: resizePattern(t.steps, snapped) }));
+      const next = prev.map(t => ({
+      ...t,
+      steps: resizePattern(t.steps, snapped),
+      ...(t.pianoSteps ? { pianoSteps: resizePianoSteps(t.pianoSteps, snapped) } : {}),
+    }));
       autoSave(next, bpm, snapped);
       return next;
     });
@@ -199,6 +215,7 @@ export function usePattern() {
         id: Date.now().toString(),
         name: src.name + ' (copy)',
         steps: [...src.steps],
+        ...(src.pianoSteps ? { pianoSteps: src.pianoSteps.map(s => ({ ...s })) } : {}),
         fx: {
           reverb: { ...src.fx.reverb },
           delay: { ...src.fx.delay },
@@ -262,6 +279,24 @@ export function usePattern() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const togglePianoStep = useCallback((trackId: string, stepIndex: number) => {
+    setTracks(prev => prev.map(t => {
+      if (t.id !== trackId || !t.pianoSteps) return t;
+      const newSteps = [...t.pianoSteps];
+      newSteps[stepIndex] = { ...newSteps[stepIndex], active: !newSteps[stepIndex].active };
+      return { ...t, pianoSteps: newSteps };
+    }));
+  }, []);
+
+  const setPianoStepNote = useCallback((trackId: string, stepIndex: number, note: string) => {
+    setTracks(prev => prev.map(t => {
+      if (t.id !== trackId || !t.pianoSteps) return t;
+      const newSteps = [...t.pianoSteps];
+      newSteps[stepIndex] = { active: note !== '', note };
+      return { ...t, pianoSteps: newSteps };
+    }));
+  }, []);
+
   const toggleMute = useCallback((trackId: string) => {
     setTracks(prev => prev.map(t => t.id === trackId ? { ...t, muted: !t.muted } : t));
   }, []);
@@ -283,5 +318,6 @@ export function usePattern() {
     addTrack, removeTrack, updateTrack, reorderTracks, duplicateTrack,
     savePattern, loadPattern, exportPattern,
     toggleMute, toggleSolo,
+    togglePianoStep, setPianoStepNote,
   };
 }

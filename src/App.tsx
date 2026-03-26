@@ -30,6 +30,7 @@ export default function App() {
     addTrack, removeTrack, updateTrack, reorderTracks, duplicateTrack,
     savePattern, loadPattern, exportPattern,
     toggleMute, toggleSolo,
+    togglePianoStep, setPianoStepNote,
   } = usePattern();
 
   const handleDemo = () => setShowWelcome(false);
@@ -49,8 +50,20 @@ export default function App() {
   const selectedTrack = tracks.find(t => t.id === selectedTrackId) ?? null;
 
   const handleUpdateTrack = useCallback((changes: Partial<Track>) => {
-    if (selectedTrackId) updateTrack(selectedTrackId, changes);
-  }, [selectedTrackId, updateTrack]);
+    if (!selectedTrackId) return;
+    // Switching to Piano: initialize pianoSteps if not already present
+    if (changes.instrument === 'Piano') {
+      const track = tracks.find(t => t.id === selectedTrackId);
+      if (track && !track.pianoSteps) {
+        updateTrack(selectedTrackId, {
+          ...changes,
+          pianoSteps: Array(globalSteps).fill(null).map(() => ({ active: false, note: '' })),
+        });
+        return;
+      }
+    }
+    updateTrack(selectedTrackId, changes);
+  }, [selectedTrackId, tracks, globalSteps, updateTrack]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -127,6 +140,8 @@ export default function App() {
           currentStep={currentStep}
           isPlaying={isPlaying}
           onToggleStep={toggleStep}
+          onTogglePianoStep={togglePianoStep}
+          onSetPianoStepNote={setPianoStepNote}
           selectedTrackId={selectedTrackId}
           onSelectTrack={setSelectedTrackId}
           zoom={zoom}
