@@ -57,7 +57,7 @@ export function TopBar({
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveName, setSaveName] = useState(patternName);
-  const [exporting, setExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState<'idle' | 'recording' | 'encoding' | 'done' | 'error'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleBpmChange = (delta: number) => {
@@ -72,14 +72,24 @@ export function TopBar({
 
   const handleExportWav = async () => {
     setShowExportMenu(false);
-    setExporting(true);
+    if (exportStatus !== 'idle') return;
+
+    // Auto-start sequencer if not playing so MediaRecorder captures audio
+    const wasPlaying = isPlaying;
+    if (!wasPlaying) {
+      onTogglePlay();
+      await new Promise(r => setTimeout(r, 250));
+    }
+
     try {
-      const pattern = onExportPattern();
-      await exportWav(pattern.tracks, pattern.bpm, pattern.globalSteps);
-    } catch (e) {
-      alert('Erreur lors de l\'export WAV');
+      await exportWav(patternName, globalSteps, bpm, (status) => setExportStatus(status));
+    } catch {
+      // error state already set by exportWav via onProgress
     } finally {
-      setExporting(false);
+      if (!wasPlaying) {
+        onTogglePlay();
+      }
+      setTimeout(() => setExportStatus('idle'), 3000);
     }
   };
 
@@ -203,7 +213,11 @@ export function TopBar({
       </div>
 
       <div className="topbar-actions">
-        {exporting && <span className="exporting-label">Export en cours...</span>}
+        {exportStatus !== 'idle' && exportStatus !== 'done' && exportStatus !== 'error' && (
+          <span className="exporting-label">
+            {exportStatus === 'recording' ? '⏺ Enregistrement...' : '⚙ Encodage WAV...'}
+          </span>
+        )}
 
         <button className="btn-action" onClick={() => setShowSaveModal(true)} title="Ctrl+S">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -231,8 +245,12 @@ export function TopBar({
               <button onClick={() => { exportJson(onExportPattern()); setShowExportMenu(false); }}>
                 Exporter pattern JSON
               </button>
-              <button onClick={handleExportWav}>
-                Exporter WAV (offline)
+              <button onClick={handleExportWav} disabled={exportStatus !== 'idle'}>
+                {exportStatus === 'idle' && 'Exporter WAV'}
+                {exportStatus === 'recording' && '⏺ Enregistrement...'}
+                {exportStatus === 'encoding' && '⚙ Encodage...'}
+                {exportStatus === 'done' && '✅ Téléchargé !'}
+                {exportStatus === 'error' && '❌ Erreur — réessayer'}
               </button>
               <button onClick={() => { copyPatternToClipboard(onExportPattern()); setShowExportMenu(false); }}>
                 Copier pattern

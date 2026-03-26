@@ -1,114 +1,91 @@
 import * as Tone from 'tone';
-import type { Pattern, Track, InstrumentName } from '../types';
-import { createSynth, getTriggerNote, isNoiseBased } from '../utils/synths';
+import type { Pattern } from '../types';
+import { encodeWav } from '../utils/encodeWav';
 
-function audioBufferToWav(buffer: AudioBuffer): ArrayBuffer {
-  const numChannels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const format = 1; // PCM
-  const bitDepth = 16;
-  const bytesPerSample = bitDepth / 8;
-  const blockAlign = numChannels * bytesPerSample;
-  const byteRate = sampleRate * blockAlign;
-  const dataSize = buffer.length * blockAlign;
-  const headerSize = 44;
-  const arrayBuffer = new ArrayBuffer(headerSize + dataSize);
-  const view = new DataView(arrayBuffer);
+export type ExportStatus = 'recording' | 'encoding' | 'done' | 'error';
 
-  function writeString(offset: number, str: string) {
-    for (let i = 0; i < str.length; i++) {
-      view.setUint8(offset + i, str.charCodeAt(i));
-    }
-  }
+/**
+ * Export WAV via MediaRecorder — captures exactly what you hear.
+ * Requires the Tone.js transport to be running before calling.
+ */
+export async function exportWav(
+  patternName: string,
+  globalSteps: number,
+  bpm: number,
+  onProgress?: (status: ExportStatus) => void
+): Promise<void> {
+  try {
+    onProgress?.('recording');
 
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + dataSize, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, format, true);
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, byteRate, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, bitDepth, true);
-  writeString(36, 'data');
-  view.setUint32(40, dataSize, true);
+    const rawCtx = Tone.context.rawContext as AudioContext;
+    const dest = rawCtx.createMediaStreamDestination();
 
-  let offset = 44;
-  for (let i = 0; i < buffer.length; i++) {
-    for (let ch = 0; ch < numChannels; ch++) {
-      const sample = Math.max(-1, Math.min(1, buffer.getChannelData(ch)[i]));
-      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
-      offset += 2;
-    }
-  }
+    // Tap into Tone.Destination's input node to capture all audio
+    const toneDestNode = (Tone.getDestination() as any).input as AudioNode;
+    toneDestNode.connect(dest);
 
-  return arrayBuffer;
-}
+    // Pick best supported codec
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : MediaRecorder.isTypeSupported('audio/webm')
+      ? 'audio/webm'
+      : 'audio/ogg';
 
-function triggerInOffline(
-  synth: Tone.MembraneSynth | Tone.NoiseSynth | Tone.Synth | Tone.MetalSynth | Tone.PolySynth | Tone.PluckSynth,
-  instrument: InstrumentName,
-  time: number
-) {
-  if (isNoiseBased(instrument)) {
-    (synth as Tone.NoiseSynth).triggerAttackRelease('16n', time);
-  } else if (synth instanceof Tone.PolySynth) {
-    synth.triggerAttackRelease(['C3', 'E3', 'G3'], '8n', time);
-  } else if (synth instanceof Tone.PluckSynth) {
-    synth.triggerAttack(getTriggerNote(instrument), time);
-  } else if (synth instanceof Tone.MembraneSynth || synth instanceof Tone.MetalSynth) {
-    (synth as Tone.MembraneSynth).triggerAttackRelease(getTriggerNote(instrument), '8n', time);
-  } else {
-    const duration = ['Pad', 'Organ', 'Sweep', 'Riser'].includes(instrument) ? '4n' : '16n';
-    (synth as Tone.Synth).triggerAttackRelease(getTriggerNote(instrument), duration, time);
-  }
-}
+    const recorder = new MediaRecorder(dest.stream, { mimeType });
+    const chunks: Blob[] = [];
+    recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
 
-export async function exportWav(tracks: Track[], bpm: number, globalSteps: number): Promise<void> {
-  const stepDuration = 60 / bpm / 4;
-  const totalDuration = stepDuration * globalSteps + 2;
+    // Duration of one full loop
+    const stepDuration = 60 / bpm / 4;
+    const loopDuration = globalSteps * stepDuration;
+    const durationMs = loopDuration * 1000;
 
-  const toneBuffer = await Tone.Offline(async ({ transport }) => {
-    transport.bpm.value = bpm;
-    const synths: Array<{ synth: ReturnType<typeof createSynth>; track: Track }> = [];
+    recorder.start(100);
 
-    for (const track of tracks) {
-      if (track.muted) continue;
-      const synth = createSynth(track.instrument);
-      const vol = new Tone.Volume(Tone.gainToDb(track.volume / 100));
-      synth.connect(vol);
-      vol.toDestination();
-      synths.push({ synth, track });
-    }
+    // Record for exactly one loop + small buffer
+    await new Promise<void>((resolve) => setTimeout(resolve, durationMs + 300));
 
-    const steps = Array.from({ length: globalSteps }, (_, i) => i);
-    new Tone.Sequence(
-      (time, step) => {
-        for (const { synth, track } of synths) {
-          if (!track.steps[step as number]) continue;
-          try {
-            triggerInOffline(synth, track.instrument, time);
-          } catch {}
+    recorder.stop();
+    toneDestNode.disconnect(dest);
+
+    onProgress?.('encoding');
+
+    await new Promise<void>((resolve, reject) => {
+      recorder.onstop = async () => {
+        try {
+          const blob = new Blob(chunks, { type: mimeType });
+          const arrayBuffer = await blob.arrayBuffer();
+
+          const audioCtx = new AudioContext();
+          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+          audioCtx.close();
+
+          const wavBlob = encodeWav(audioBuffer);
+
+          const url = URL.createObjectURL(wavBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${patternName.replace(/[^a-z0-9]/gi, '_')}.wav`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          onProgress?.('done');
+          resolve();
+        } catch (err) {
+          console.error('WAV encoding error:', err);
+          onProgress?.('error');
+          reject(err);
         }
-      },
-      steps,
-      '16n'
-    ).start(0);
+      };
+    });
 
-    transport.start();
-  }, totalDuration);
-
-  const audioBuffer = toneBuffer.get() as AudioBuffer;
-  const wav = audioBufferToWav(audioBuffer);
-  const blob = new Blob([wav], { type: 'audio/wav' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'beatstudio-export.wav';
-  a.click();
-  URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('WAV export error:', err);
+    onProgress?.('error');
+    throw err;
+  }
 }
 
 export function exportJson(pattern: Pattern): void {
