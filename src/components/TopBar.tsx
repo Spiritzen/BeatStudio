@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Pattern } from '../types';
 import { exportJson, copyPatternToClipboard, exportWav } from '../hooks/useExport';
 import './TopBar.css';
@@ -9,6 +9,7 @@ interface TopBarProps {
   globalSteps: number;
   mode: 'tone' | 'sample';
   patternName: string;
+  isDirty: boolean;
   onTogglePlay: () => void;
   onBpmChange: (bpm: number) => void;
   onStepsChange: (steps: number) => void;
@@ -19,8 +20,30 @@ interface TopBarProps {
   onImportPattern: (p: Pattern) => void;
 }
 
+interface Prefab {
+  name: string;
+  file: string;
+  description: string;
+  emoji: string;
+}
+
+const PREFABS: Prefab[] = [
+  {
+    name: 'Default Beat',
+    file: 'default.json',
+    description: 'Pattern de démonstration',
+    emoji: '🥁',
+  },
+  {
+    name: 'Zelda Theme',
+    file: 'ZeldaTheme_BeatStudio_v2.json',
+    description: 'Thème principal de Zelda au piano',
+    emoji: '🗡️',
+  },
+];
+
 export function TopBar({
-  isPlaying, bpm, globalSteps, mode, patternName,
+  isPlaying, bpm, globalSteps, mode, patternName, isDirty,
   onTogglePlay, onBpmChange, onStepsChange, onModeChange,
   onSave, onPatternNameChange, onExportPattern, onImportPattern,
 }: TopBarProps) {
@@ -50,15 +73,89 @@ export function TopBar({
     onStepsChange(val);
   };
 
-  // Keep local input in sync with external changes (e.g. import)
   if (String(globalSteps) !== stepsInput && document.activeElement?.className !== 'steps-input') {
     // only sync when not focused
   }
+
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveName, setSaveName] = useState(patternName);
   const [exportStatus, setExportStatus] = useState<'idle' | 'recording' | 'encoding' | 'done' | 'error'>('idle');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Prefabs
+  const [showPrefabs, setShowPrefabs] = useState(false);
+  useEffect(() => {
+    if (!showPrefabs) return;
+    const close = () => setShowPrefabs(false);
+    window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, [showPrefabs]);
+
+  const handleLoadPrefab = async (prefab: Prefab) => {
+    const doLoad = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.BASE_URL}patterns/${prefab.file}`);
+        if (!res.ok) throw new Error(`Fichier introuvable : ${prefab.file}`);
+        const pattern: Pattern = await res.json();
+        onImportPattern(pattern);
+        onPatternNameChange(prefab.name);
+        setShowPrefabs(false);
+      } catch (err) {
+        console.error('Prefab load error:', err);
+        alert(`Impossible de charger le prefab "${prefab.name}".`);
+      }
+    };
+
+    if (isDirty) {
+      const confirmed = window.confirm(
+        `Voulez-vous charger "${prefab.name}" ?\nLes modifications non sauvegardées seront perdues.`
+      );
+      if (confirmed) await doLoad();
+    } else {
+      await doLoad();
+    }
+  };
+
+  // Standalone load button
+  const loadFileRef = useRef<HTMLInputElement>(null);
+
+  const handleLoadClick = () => {
+    loadFileRef.current?.click();
+  };
+
+  const handleFileLoad = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const doLoad = () => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const parsed = JSON.parse(ev.target?.result as string) as Pattern;
+          if (!parsed.tracks || !Array.isArray(parsed.tracks)) {
+            alert('Format de fichier invalide.');
+            return;
+          }
+          onImportPattern(parsed);
+          onPatternNameChange(parsed.name || file.name.replace('.json', ''));
+        } catch {
+          alert('Fichier JSON invalide.');
+        }
+      };
+      reader.readAsText(file);
+      if (loadFileRef.current) loadFileRef.current.value = '';
+    };
+
+    if (isDirty) {
+      const confirmed = window.confirm(
+        'Voulez-vous charger ce pattern ?\nLes modifications non sauvegardées seront perdues.'
+      );
+      if (confirmed) doLoad();
+      else if (loadFileRef.current) loadFileRef.current.value = '';
+    } else {
+      doLoad();
+    }
+  };
 
   const handleBpmChange = (delta: number) => {
     const next = Math.min(240, Math.max(40, bpm + delta));
@@ -74,7 +171,6 @@ export function TopBar({
     setShowExportMenu(false);
     if (exportStatus !== 'idle') return;
 
-    // Auto-start sequencer if not playing so MediaRecorder captures audio
     const wasPlaying = isPlaying;
     if (!wasPlaying) {
       onTogglePlay();
@@ -84,29 +180,13 @@ export function TopBar({
     try {
       await exportWav(patternName, globalSteps, bpm, (status) => setExportStatus(status));
     } catch {
-      // error state already set by exportWav via onProgress
+      // error state set by exportWav
     } finally {
       if (!wasPlaying) {
         onTogglePlay();
       }
       setTimeout(() => setExportStatus('idle'), 3000);
     }
-  };
-
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const pattern = JSON.parse(ev.target?.result as string) as Pattern;
-        onImportPattern(pattern);
-      } catch {
-        alert('Fichier invalide');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
   };
 
   return (
@@ -141,6 +221,7 @@ export function TopBar({
             title="Double-clic pour renommer"
           >
             <span className="pattern-name-text">{patternName}</span>
+            {isDirty && <span className="pattern-dirty-dot" title="Modifications non sauvegardées" />}
             <svg className="pattern-name-edit-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -219,6 +300,57 @@ export function TopBar({
           </span>
         )}
 
+        {/* Prefabs dropdown */}
+        <div className="prefabs-wrap">
+          <button
+            className="btn-action prefabs-btn"
+            onClick={(e) => { e.stopPropagation(); setShowPrefabs(v => !v); }}
+            title="Charger un pattern prédéfini"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+            Prefabs ▾
+          </button>
+          {showPrefabs && (
+            <div className="prefabs-dropdown" onClick={e => e.stopPropagation()}>
+              <div className="prefabs-title">Patterns prédéfinis</div>
+              {PREFABS.map(prefab => (
+                <button
+                  key={prefab.file}
+                  className="prefab-item"
+                  onClick={() => handleLoadPrefab(prefab)}
+                >
+                  <span className="prefab-emoji">{prefab.emoji}</span>
+                  <div className="prefab-text">
+                    <span className="prefab-name">{prefab.name}</span>
+                    <span className="prefab-desc">{prefab.description}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Standalone load button */}
+        <button
+          className="btn-action load-btn"
+          onClick={handleLoadClick}
+          title="Charger un pattern JSON"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          Charger
+        </button>
+        <input
+          ref={loadFileRef}
+          type="file"
+          accept=".json"
+          style={{ display: 'none' }}
+          onChange={handleFileLoad}
+        />
+
         <button className="btn-action" onClick={() => setShowSaveModal(true)} title="Ctrl+S">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
@@ -255,22 +387,10 @@ export function TopBar({
               <button onClick={() => { copyPatternToClipboard(onExportPattern()); setShowExportMenu(false); }}>
                 Copier pattern
               </button>
-              <hr/>
-              <button onClick={() => { fileInputRef.current?.click(); setShowExportMenu(false); }}>
-                📂 Charger un pattern...
-              </button>
             </div>
           )}
         </div>
       </div>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".json"
-        style={{ display: 'none' }}
-        onChange={handleImport}
-      />
 
       {showSaveModal && (
         <div className="modal-overlay" onClick={() => setShowSaveModal(false)}>

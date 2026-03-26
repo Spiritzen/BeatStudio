@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { TopBar } from './components/TopBar';
 import { LeftPanel } from './components/LeftPanel/LeftPanel';
 import { CenterGrid } from './components/CenterGrid/CenterGrid';
@@ -7,7 +7,7 @@ import { Footer } from './components/Footer';
 import { WelcomeModal } from './components/WelcomeModal';
 import { usePattern } from './hooks/usePattern';
 import { useSequencer } from './hooks/useSequencer';
-import type { Track, InstrumentName } from './types';
+import type { Track, InstrumentName, Pattern } from './types';
 import './styles/globals.css';
 import './App.css';
 
@@ -33,15 +33,44 @@ export default function App() {
     togglePianoStep, setPianoStepNote,
   } = usePattern();
 
+  // ── Dirty tracking ───────────────────────────────────────────────
+  const [isDirty, setIsDirty] = useState(false);
+  const firstMountRef = useRef(false);
+  const suppressDirtyRef = useRef(false);
+
+  useEffect(() => {
+    if (!firstMountRef.current) {
+      firstMountRef.current = true;
+      return;
+    }
+    if (suppressDirtyRef.current) {
+      suppressDirtyRef.current = false;
+      return;
+    }
+    setIsDirty(true);
+  }, [tracks, bpm, globalSteps]);
+
+  const handleSavePattern = useCallback((name: string) => {
+    savePattern(name);
+    setIsDirty(false);
+  }, [savePattern]);
+
+  const handleLoadPattern = useCallback((pattern: Pattern) => {
+    suppressDirtyRef.current = true;
+    loadPattern(pattern);
+    setIsDirty(false);
+  }, [loadPattern]);
+  // ─────────────────────────────────────────────────────────────────
+
   const handleDemo = () => setShowWelcome(false);
 
   const handleNew = () => {
-    loadPattern({ version: '1.0.0', bpm: 120, globalSteps: 16, tracks: [], createdAt: new Date().toISOString() });
+    handleLoadPattern({ version: '1.0.0', bpm: 120, globalSteps: 16, tracks: [], createdAt: new Date().toISOString() });
     setShowWelcome(false);
   };
 
   const handleLoad = (pattern: any) => {
-    loadPattern(pattern);
+    handleLoadPattern(pattern);
     setShowWelcome(false);
   };
 
@@ -51,7 +80,6 @@ export default function App() {
 
   const handleUpdateTrack = useCallback((changes: Partial<Track>) => {
     if (!selectedTrackId) return;
-    // Switching to Piano: initialize pianoSteps if not already present
     if (changes.instrument === 'Piano') {
       const track = tracks.find(t => t.id === selectedTrackId);
       if (track && !track.pianoSteps) {
@@ -81,7 +109,7 @@ export default function App() {
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        savePattern('default');
+        handleSavePattern(patternName || 'default');
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'd' && !isInput) {
         e.preventDefault();
@@ -93,7 +121,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [togglePlay, undo, savePattern, selectedTrackId, duplicateTrack, toggleMute]);
+  }, [togglePlay, undo, handleSavePattern, patternName, selectedTrackId, duplicateTrack, toggleMute]);
 
   return (
     <>
@@ -111,14 +139,15 @@ export default function App() {
         globalSteps={globalSteps}
         mode={mode}
         patternName={patternName}
+        isDirty={isDirty}
         onTogglePlay={togglePlay}
         onBpmChange={updateBpm}
         onStepsChange={updateGlobalSteps}
         onModeChange={setMode}
-        onSave={savePattern}
+        onSave={handleSavePattern}
         onPatternNameChange={setPatternName}
         onExportPattern={exportPattern}
-        onImportPattern={loadPattern}
+        onImportPattern={handleLoadPattern}
       />
 
       <div className="app-body">
