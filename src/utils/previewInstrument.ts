@@ -41,8 +41,7 @@ export const previewInstrument = async (instName: InstrumentName): Promise<void>
     // Métal
     if (['cowbell', 'bell'].includes(t)) {
       const s = new Tone.MetalSynth({
-        frequency: t === 'bell' ? 320 : 540,
-        envelope: { attack: 0.001, decay: 0.5, release: 0.1 },
+        envelope: { attack: 0.001, decay: t === 'bell' ? 1.0 : 0.5, release: 0.1 },
         harmonicity: 5.1,
         modulationIndex: 16,
         resonance: 3000,
