@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/beatstudio.jpg" alt="BeatStudio Banner" width="100%"/>
+<img src="public/beatstudiopiano.jpg" alt="BeatStudio Banner" width="100%"/>
 
 # 🎛️ BeatStudio
 
@@ -37,7 +37,7 @@
 | Utiliser ses propres samples | ✅ Import .wav / .mp3 / .ogg par piste |
 | Appliquer des effets audio | ✅ Reverb · Delay · Distortion · Filter par piste |
 | Sauvegarder et reprendre son travail | ✅ Export JSON + sauvegarde localStorage |
-| Exporter un fichier audio | ✅ Export WAV via Tone.Offline |
+| Exporter un fichier audio | ✅ Export WAV réel via MediaRecorder (son identique à la lecture) |
 | Travailler sans connexion | ✅ 100% local, zéro API obligatoire |
 
 ---
@@ -52,6 +52,9 @@
 - BPM réglable en temps réel — 40 à 240 BPM
 - Boucle automatique infinie
 - **Zoom grille** de 50% à 200% — vue d'ensemble ou détail
+- **Piano virtuel** 4 octaves (C1 → B4) — assignation de notes par step
+- **Preview sonore** au clic sur chaque instrument
+- **Prefabs** — patterns prédéfinis chargeables en un clic
 
 ### 🎹 Instruments — 26 sons synthétiques
 
@@ -83,7 +86,9 @@
 - **Pattern par défaut** — chargé automatiquement au premier lancement
 - **Export JSON** — pattern complet incluant les effets par piste
 - **Import JSON** — chargement fidèle pistes + effets
-- **Export WAV** — rendu audio offline via `Tone.Offline`
+- **Bouton Charger** — import JSON depuis la TopBar avec confirmation
+- **Prefabs** — bibliothèque de patterns prédéfinis (Default · Zelda Theme)
+- **Export WAV réel** — capture MediaRecorder → encodage PCM 16bit
 - **Copier pattern** — JSON dans le presse-papier
 
 ### 🖥️ Interface
@@ -148,7 +153,9 @@ src/
 │   └── useExport.ts             # JSON · WAV · Clipboard
 ├── utils/
 │   ├── synths.ts                # 26 synthétiseurs Tone.js
-│   └── effects.ts               # Chaîne d'effets par piste
+│   ├── effects.ts               # Chaîne d'effets par piste
+│   ├── encodeWav.ts             # Encodeur WAV PCM 16bit
+│   └── previewInstrument.ts     # Preview sonore au clic
 ├── types/
 │   └── index.ts                 # Interfaces Pattern · Track · TrackFx
 └── App.tsx
@@ -219,6 +226,15 @@ Le pattern exporté est un fichier JSON lisible et portable, **effets inclus** :
 ---
 
 ## 📋 Changelog
+
+### v1.2.1 — Export WAV · Prefabs · Preview instruments · Charger
+
+- ✨ Export WAV réel via MediaRecorder → PCM 16bit (Audacity · OBS · After Effects)
+- ✨ Bouton Prefabs ▾ — patterns prédéfinis chargeables (Default · Zelda Theme)
+- ✨ Bouton Charger standalone dans la TopBar (retiré du dropdown Exporter)
+- ✨ Preview sonore au clic sur chaque instrument (InstrumentPicker + AddTrackModal)
+- ✨ Volume synths augmenté +6dB sur tous les instruments
+- 🐛 Fix collision preview/synth — sélection avant preview (setTimeout 100ms)
 
 ### v1.1.2 — Piano virtuel + Modale d'accueil
 - ✨ Instrument Piano avec clavier virtuel 4 octaves (C1 → B4)
