@@ -16,30 +16,35 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
         pitchDecay: 0.04,
         octaves: 7,
         envelope: { attack: 0.001, decay: 0.3, sustain: 0, release: 0.1 },
+        volume: 6,
       });
 
     case 'Snare':
       return new Tone.NoiseSynth({
         noise: { type: 'white' },
         envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.05 },
+        volume: 6,
       });
 
     case 'Clap':
       return new Tone.NoiseSynth({
         noise: { type: 'white' },
         envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.05 },
+        volume: 6,
       });
 
     case 'HiHat':
       return new Tone.NoiseSynth({
         noise: { type: 'white' },
         envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.01 },
+        volume: 6,
       });
 
     case 'OpenHat':
       return new Tone.NoiseSynth({
         noise: { type: 'white' },
         envelope: { attack: 0.001, decay: 0.4, sustain: 0, release: 0.1 },
+        volume: 6,
       });
 
     case 'Tom Hi':
@@ -47,6 +52,7 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
         pitchDecay: 0.06,
         octaves: 4,
         envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.1 },
+        volume: 6,
       });
 
     case 'Tom Mid':
@@ -54,6 +60,7 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
         pitchDecay: 0.07,
         octaves: 4,
         envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.1 },
+        volume: 6,
       });
 
     case 'Tom Floor':
@@ -61,12 +68,14 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
         pitchDecay: 0.08,
         octaves: 5,
         envelope: { attack: 0.001, decay: 0.35, sustain: 0, release: 0.15 },
+        volume: 6,
       });
 
     case 'Rimshot':
       return new Tone.Synth({
         oscillator: { type: 'sine' },
         envelope: { attack: 0.001, decay: 0.04, sustain: 0, release: 0.01 },
+        volume: 6,
       });
 
     case 'Cowbell':
@@ -76,12 +85,14 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
         modulationIndex: 32,
         resonance: 4000,
         octaves: 1.5,
+        volume: 6,
       });
 
     case 'Tambourine':
       return new Tone.NoiseSynth({
         noise: { type: 'pink' },
         envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.05 },
+        volume: 6,
       });
 
     case 'Conga':
@@ -89,24 +100,28 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
         pitchDecay: 0.05,
         octaves: 3,
         envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.1 },
+        volume: 6,
       });
 
     case 'Bass Synth':
       return new Tone.Synth({
         oscillator: { type: 'sawtooth' },
         envelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.3 },
+        volume: 6,
       });
 
     case 'Lead Synth':
       return new Tone.Synth({
         oscillator: { type: 'square' },
         envelope: { attack: 0.01, decay: 0.1, sustain: 0.6, release: 0.2 },
+        volume: 6,
       });
 
     case 'Pad':
       return new Tone.PolySynth(Tone.Synth, {
         oscillator: { type: 'sine' },
         envelope: { attack: 0.3, decay: 0.2, sustain: 0.8, release: 1.0 },
+        volume: 6,
       });
 
     case 'Pluck':
@@ -114,6 +129,7 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
         attackNoise: 1,
         dampening: 4000,
         resonance: 0.95,
+        volume: 6,
       });
 
     case 'Bell':
@@ -123,48 +139,56 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
         modulationIndex: 16,
         resonance: 3200,
         octaves: 1.5,
+        volume: 6,
       });
 
     case 'Marimba':
       return new Tone.Synth({
         oscillator: { type: 'sine' },
         envelope: { attack: 0.001, decay: 0.3, sustain: 0, release: 0.2 },
+        volume: 6,
       });
 
     case 'Organ':
       return new Tone.Synth({
         oscillator: { type: 'sine' },
         envelope: { attack: 0.01, decay: 0.1, sustain: 0.9, release: 0.3 },
+        volume: 6,
       });
 
     case 'Flute':
       return new Tone.Synth({
         oscillator: { type: 'triangle' },
         envelope: { attack: 0.1, decay: 0.2, sustain: 0.7, release: 0.5 },
+        volume: 6,
       });
 
     case 'Noise':
       return new Tone.NoiseSynth({
         noise: { type: 'white' },
         envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.1 },
+        volume: 6,
       });
 
     case 'Zap':
       return new Tone.Synth({
         oscillator: { type: 'sawtooth' },
         envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.01 },
+        volume: 6,
       });
 
     case 'Laser':
       return new Tone.Synth({
         oscillator: { type: 'square' },
         envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.05 },
+        volume: 6,
       });
 
     case 'Sweep':
       return new Tone.Synth({
         oscillator: { type: 'sine' },
         envelope: { attack: 0.5, decay: 0.3, sustain: 0.5, release: 0.5 },
+        volume: 6,
       });
 
     case 'Boom':
@@ -172,19 +196,21 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
         pitchDecay: 0.1,
         octaves: 10,
         envelope: { attack: 0.001, decay: 0.5, sustain: 0, release: 0.2 },
+        volume: 6,
       });
 
     case 'Riser':
       return new Tone.Synth({
         oscillator: { type: 'sawtooth' },
         envelope: { attack: 1.0, decay: 0.5, sustain: 0.7, release: 0.5 },
+        volume: 6,
       });
 
     case 'Piano':
       return new Tone.PolySynth(Tone.Synth, {
         oscillator: { type: 'triangle' },
         envelope: { attack: 0.02, decay: 0.3, sustain: 0.4, release: 1.2 },
-        volume: -6,
+        volume: 0,
       });
 
     default:

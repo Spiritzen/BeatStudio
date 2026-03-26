@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { InstrumentName } from '../../types';
 import { INSTRUMENT_CATEGORIES } from '../../types';
+import { previewInstrument } from '../../utils/previewInstrument';
 import './AddTrackModal.css';
 
 interface AddTrackModalProps {
@@ -42,7 +43,7 @@ export function AddTrackModal({ onAdd, onClose }: AddTrackModalProps) {
                 <button
                   key={instr}
                   className={`atm-instr-btn ${selected === instr ? 'selected' : ''}`}
-                  onClick={() => setSelected(instr)}
+                  onClick={() => { setSelected(instr); setTimeout(() => previewInstrument(instr), 100); }}
                 >
                   {instr}
                 </button>

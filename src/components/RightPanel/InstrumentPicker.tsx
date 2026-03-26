@@ -1,5 +1,6 @@
 import type { InstrumentName } from '../../types';
 import { INSTRUMENT_CATEGORIES } from '../../types';
+import { previewInstrument } from '../../utils/previewInstrument';
 import './InstrumentPicker.css';
 
 interface InstrumentPickerProps {
@@ -8,6 +9,11 @@ interface InstrumentPickerProps {
 }
 
 export function InstrumentPicker({ current, onChange }: InstrumentPickerProps) {
+  const handleClick = (instr: InstrumentName) => {
+    onChange(instr);
+    setTimeout(() => previewInstrument(instr), 100);
+  };
+
   return (
     <div className="instrument-picker">
       {Object.entries(INSTRUMENT_CATEGORIES).map(([cat, instruments]) => (
@@ -18,7 +24,7 @@ export function InstrumentPicker({ current, onChange }: InstrumentPickerProps) {
               <button
                 key={instr}
                 className={`instr-btn ${current === instr ? 'selected' : ''}`}
-                onClick={() => onChange(instr)}
+                onClick={() => handleClick(instr)}
               >
                 {instr}
               </button>
