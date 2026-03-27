@@ -1,7 +1,6 @@
 import * as Tone from 'tone'
-import type { InstrumentName } from '../types'
 
-export const previewInstrument = async (instName: InstrumentName): Promise<void> => {
+export const previewInstrument = async (instName: string, note?: string): Promise<void> => {
   try {
     if (Tone.context.state !== 'running') {
       await Tone.start()
@@ -10,19 +9,19 @@ export const previewInstrument = async (instName: InstrumentName): Promise<void>
     const now = Tone.now()
     const t = instName.toLowerCase()
 
-    // Percussions à membrane
+    // Percussions à membrane — note ignorée (pas de hauteur)
     if (['kick', 'boom', 'tom hi', 'tom mid', 'tom floor', 'conga'].includes(t)) {
       const s = new Tone.MembraneSynth().toDestination()
-      const note = t === 'kick' || t === 'boom' ? 'C1'
-                 : t === 'tom hi' ? 'A2'
-                 : t === 'tom mid' ? 'F2'
-                 : t === 'conga' ? 'E2' : 'C2'
-      s.triggerAttackRelease(note, '8n', now)
+      const defaultNote = t === 'kick' || t === 'boom' ? 'C1'
+                        : t === 'tom hi' ? 'A2'
+                        : t === 'tom mid' ? 'F2'
+                        : t === 'conga' ? 'E2' : 'C2'
+      s.triggerAttackRelease(defaultNote, '8n', now)
       setTimeout(() => { try { s.dispose() } catch (_) {} }, 2000)
       return
     }
 
-    // Bruits blancs
+    // Bruits blancs — note ignorée
     if (['snare', 'clap', 'hihat', 'openhat', 'rimshot', 'tambourine', 'noise'].includes(t)) {
       const s = new Tone.NoiseSynth({
         noise: { type: 'white' },
@@ -38,7 +37,7 @@ export const previewInstrument = async (instName: InstrumentName): Promise<void>
       return
     }
 
-    // Métal
+    // Métal — note ignorée (MetalSynth n'est pas piché)
     if (['cowbell', 'bell'].includes(t)) {
       const s = new Tone.MetalSynth({
         envelope: { attack: 0.001, decay: t === 'bell' ? 1.0 : 0.5, release: 0.1 },
@@ -55,7 +54,7 @@ export const previewInstrument = async (instName: InstrumentName): Promise<void>
     // Pluck
     if (t === 'pluck') {
       const s = new Tone.PluckSynth().toDestination()
-      s.triggerAttack('C4', now)
+      s.triggerAttack(note ?? 'C4', now)
       setTimeout(() => { try { s.dispose() } catch (_) {} }, 2000)
       return
     }
@@ -66,7 +65,7 @@ export const previewInstrument = async (instName: InstrumentName): Promise<void>
         oscillator: { type: 'triangle' },
         envelope: { attack: 0.02, decay: 0.3, sustain: 0.4, release: 1.0 },
       }).toDestination()
-      s.triggerAttackRelease('C4', '4n', now)
+      s.triggerAttackRelease(note ?? 'C4', '4n', now)
       setTimeout(() => { try { s.dispose() } catch (_) {} }, 3000)
       return
     }
@@ -77,7 +76,7 @@ export const previewInstrument = async (instName: InstrumentName): Promise<void>
         oscillator: { type: 'sine' },
         envelope: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.5 },
       }).toDestination()
-      s.triggerAttackRelease('C3', '4n', now)
+      s.triggerAttackRelease(note ?? 'C3', '4n', now)
       setTimeout(() => { try { s.dispose() } catch (_) {} }, 3000)
       return
     }
@@ -88,7 +87,7 @@ export const previewInstrument = async (instName: InstrumentName): Promise<void>
         oscillator: { type: 'sawtooth' },
         envelope: { attack: 0.001, decay: 0.08, sustain: 0, release: 0.01 },
       }).toDestination()
-      s.triggerAttackRelease('C5', '32n', now)
+      s.triggerAttackRelease(note ?? 'C5', '32n', now)
       setTimeout(() => { try { s.dispose() } catch (_) {} }, 1000)
       return
     }
@@ -99,7 +98,7 @@ export const previewInstrument = async (instName: InstrumentName): Promise<void>
         oscillator: { type: 'square' },
         envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.01 },
       }).toDestination()
-      s.triggerAttackRelease('A5', '16n', now)
+      s.triggerAttackRelease(note ?? 'A5', '16n', now)
       setTimeout(() => { try { s.dispose() } catch (_) {} }, 1000)
       return
     }
@@ -110,8 +109,46 @@ export const previewInstrument = async (instName: InstrumentName): Promise<void>
         oscillator: { type: 'sawtooth' },
         envelope: { attack: 0.3, decay: 0.1, sustain: 0.8, release: 0.3 },
       }).toDestination()
-      s.triggerAttackRelease('G2', '4n', now)
+      s.triggerAttackRelease(note ?? 'G2', '4n', now)
       setTimeout(() => { try { s.dispose() } catch (_) {} }, 3000)
+      return
+    }
+
+    // Guitare Acoustique
+    if (t === 'guitare acoustique') {
+      const s = new Tone.PluckSynth({
+        attackNoise: 2.5,
+        dampening: 3000,
+        resonance: 0.96,
+      }).toDestination()
+      s.triggerAttack(note ?? 'E3', now)
+      setTimeout(() => { try { s.dispose() } catch (_) {} }, 3000)
+      return
+    }
+
+    // Guitare Électrique
+    if (t === 'guitare électrique') {
+      const dist = new Tone.Distortion(0.15).toDestination()
+      const s = new Tone.Synth({
+        oscillator: { type: 'sawtooth' },
+        envelope: { attack: 0.005, decay: 0.1, sustain: 0.6, release: 0.8 },
+        volume: -6,
+      }).connect(dist)
+      s.triggerAttackRelease(note ?? 'E3', '4n', now)
+      setTimeout(() => { try { s.dispose(); dist.dispose() } catch (_) {} }, 3000)
+      return
+    }
+
+    // Lyre — cristallin avec reverb
+    if (t === 'lyre') {
+      const reverb = new Tone.Reverb({ decay: 3, wet: 0.5 }).toDestination()
+      const s = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.02, decay: 0.8, sustain: 0.2, release: 2.0 },
+        volume: -4,
+      }).connect(reverb)
+      s.triggerAttackRelease(note ?? 'A4', '2n', now)
+      setTimeout(() => { try { s.dispose(); reverb.dispose() } catch (_) {} }, 5000)
       return
     }
 
@@ -126,7 +163,7 @@ export const previewInstrument = async (instName: InstrumentName): Promise<void>
       oscillator: { type: t.includes('bass') ? 'sawtooth' : 'triangle' },
       envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.3 },
     }).toDestination()
-    s.triggerAttackRelease(noteMap[t] ?? 'C3', '8n', now)
+    s.triggerAttackRelease(note ?? noteMap[t] ?? 'C3', '8n', now)
     setTimeout(() => { try { s.dispose() } catch (_) {} }, 2000)
 
   } catch (e) {

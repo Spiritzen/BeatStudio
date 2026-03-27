@@ -5,6 +5,7 @@ export type InstrumentName =
   | 'Tambourine' | 'Conga'
   | 'Bass Synth' | 'Lead Synth' | 'Pad' | 'Pluck' | 'Bell'
   | 'Marimba' | 'Organ' | 'Flute'
+  | 'Guitare Acoustique' | 'Guitare Électrique' | 'Lyre'
   | 'Noise' | 'Zap' | 'Laser' | 'Sweep' | 'Boom' | 'Riser';
 
 export interface PianoStep {
@@ -60,8 +61,7 @@ export const TRACK_COLORS = [
 ];
 
 export const INSTRUMENT_CATEGORIES: Record<string, InstrumentName[]> = {
-  'Piano': ['Piano'],
   'Percussions': ['Kick', 'Snare', 'Clap', 'HiHat', 'OpenHat', 'Tom Hi', 'Tom Mid', 'Tom Floor', 'Rimshot', 'Cowbell', 'Tambourine', 'Conga'],
-  'Mélodique': ['Bass Synth', 'Lead Synth', 'Pad', 'Pluck', 'Bell', 'Marimba', 'Organ', 'Flute'],
+  'Mélodique': ['Piano', 'Bass Synth', 'Lead Synth', 'Pad', 'Pluck', 'Bell', 'Marimba', 'Organ', 'Flute', 'Guitare Acoustique', 'Guitare Électrique', 'Lyre'],
   'FX': ['Noise', 'Zap', 'Laser', 'Sweep', 'Boom', 'Riser'],
 };

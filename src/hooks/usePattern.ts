@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { Track, InstrumentName, Pattern, PianoStep } from '../types';
 import { TRACK_COLORS } from '../types';
+import { isMelodic } from '../utils/synths';
 
 const DEFAULT_STEPS = 16;
 
@@ -43,7 +44,7 @@ function createDefaultTrack(id: string, name: string, instrument: InstrumentName
       distortion: { enabled: false, wet: 0.3 },
       filter: { enabled: false, frequency: 1000, type: 'lowpass' },
     },
-    ...(instrument === 'Piano' ? { pianoSteps: makePianoSteps(steps) } : {}),
+    ...(isMelodic(instrument) ? { pianoSteps: makePianoSteps(steps) } : {}),
   };
 }
 
@@ -297,6 +298,35 @@ export function usePattern() {
     }));
   }, []);
 
+  const changeTrackInstrument = useCallback((trackId: string, newInst: InstrumentName) => {
+    setTracks(prev => {
+      const next = prev.map(t => {
+        if (t.id !== trackId) return t;
+        const wasMelodic = isMelodic(t.instrument);
+        const willBeMelodic = isMelodic(newInst);
+
+        // Mélodique → Mélodique : conserver pianoSteps
+        if (wasMelodic && willBeMelodic) {
+          return { ...t, instrument: newInst };
+        }
+        // Percussion → Mélodique : initialiser pianoSteps depuis le pattern
+        if (!wasMelodic && willBeMelodic) {
+          const pianoSteps: PianoStep[] = t.steps.map(active => ({ active, note: '' }));
+          return { ...t, instrument: newInst, pianoSteps };
+        }
+        // Mélodique → Percussion : effacer pianoSteps, reconvertir en pattern booléen
+        if (wasMelodic && !willBeMelodic) {
+          const steps = t.pianoSteps ? t.pianoSteps.map(ps => ps.active) : t.steps;
+          return { ...t, instrument: newInst, pianoSteps: undefined, steps };
+        }
+        // Percussion → Percussion : juste changer l'instrument
+        return { ...t, instrument: newInst };
+      });
+      autoSave(next, bpm, globalSteps);
+      return next;
+    });
+  }, [bpm, globalSteps, autoSave]);
+
   const toggleMute = useCallback((trackId: string) => {
     setTracks(prev => prev.map(t => t.id === trackId ? { ...t, muted: !t.muted } : t));
   }, []);
@@ -319,5 +349,6 @@ export function usePattern() {
     savePattern, loadPattern, exportPattern,
     toggleMute, toggleSolo,
     togglePianoStep, setPianoStepNote,
+    changeTrackInstrument,
   };
 }

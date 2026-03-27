@@ -31,6 +31,7 @@ export default function App() {
     savePattern, loadPattern, exportPattern,
     toggleMute, toggleSolo,
     togglePianoStep, setPianoStepNote,
+    changeTrackInstrument,
   } = usePattern();
 
   // ── Dirty tracking ───────────────────────────────────────────────
@@ -80,18 +81,12 @@ export default function App() {
 
   const handleUpdateTrack = useCallback((changes: Partial<Track>) => {
     if (!selectedTrackId) return;
-    if (changes.instrument === 'Piano') {
-      const track = tracks.find(t => t.id === selectedTrackId);
-      if (track && !track.pianoSteps) {
-        updateTrack(selectedTrackId, {
-          ...changes,
-          pianoSteps: Array(globalSteps).fill(null).map(() => ({ active: false, note: '' })),
-        });
-        return;
-      }
+    if (changes.instrument !== undefined) {
+      changeTrackInstrument(selectedTrackId, changes.instrument);
+      return;
     }
     updateTrack(selectedTrackId, changes);
-  }, [selectedTrackId, tracks, globalSteps, updateTrack]);
+  }, [selectedTrackId, changeTrackInstrument, updateTrack]);
 
   // Keyboard shortcuts
   useEffect(() => {

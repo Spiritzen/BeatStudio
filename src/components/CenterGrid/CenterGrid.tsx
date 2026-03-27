@@ -4,6 +4,7 @@ import { StepCell } from './StepCell';
 import { Playhead } from './Playhead';
 import { PianoStepCell } from '../PianoRoll/PianoStepCell';
 import { PianoKeyboard } from '../PianoRoll/PianoKeyboard';
+import { isMelodic } from '../../utils/synths';
 import './CenterGrid.css';
 
 const STEP_W = 28;
@@ -77,7 +78,7 @@ export function CenterGrid({
           {/* Track rows */}
           <div className="grid-body" style={{ position: 'relative', zoom }}>
             {tracks.map(track => {
-              const isPiano = track.instrument === 'Piano';
+              const showPianoCell = isMelodic(track.instrument) && !!track.pianoSteps;
               return (
                 <div
                   key={track.id}
@@ -88,7 +89,7 @@ export function CenterGrid({
                     const isPlayingStep = isPlaying && currentStep === i;
                     const isBar = i % 4 === 0 && i > 0;
 
-                    if (isPiano) {
+                    if (showPianoCell) {
                       const step = track.pianoSteps?.[i] ?? { active: false, note: '' };
                       const isSelected = selectedPianoStep?.trackId === track.id && selectedPianoStep?.stepIndex === i;
                       return (
@@ -135,6 +136,7 @@ export function CenterGrid({
         <PianoKeyboard
           stepIndex={selectedPianoStep.stepIndex}
           currentNote={currentPianoNote}
+          instrumentName={selectedPianoTrack?.instrument}
           onSelectNote={handleSetNote}
           onClose={handleClosePiano}
         />

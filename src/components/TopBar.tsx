@@ -40,6 +40,12 @@ const PREFABS: Prefab[] = [
     description: 'Thème principal de Zelda au piano',
     emoji: '🗡️',
   },
+  {
+    name: 'Jingle Bells Rock',
+    file: 'JingleBellsRock_BeatStudio.json',
+    description: 'Jingle Bells version rock — Guitare électrique',
+    emoji: '🎸',
+  },
 ];
 
 export function TopBar({

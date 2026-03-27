@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import * as Tone from 'tone';
+import { useEffect } from 'react';
 import { KEY_TO_NOTE } from '../../utils/pianoKeyMap';
+import { previewInstrument } from '../../utils/previewInstrument';
 import styles from './PianoKeyboard.module.css';
 
 const WHITE_W = 28;
@@ -23,22 +23,12 @@ const BLACK_OFFSETS: Record<string, number> = {
 interface Props {
   stepIndex: number;
   currentNote: string;
+  instrumentName?: string;
   onSelectNote: (note: string) => void;
   onClose: () => void;
 }
 
-export function PianoKeyboard({ stepIndex, currentNote, onSelectNote, onClose }: Props) {
-  const synthRef = useRef<Tone.PolySynth | null>(null);
-
-  useEffect(() => {
-    synthRef.current = new Tone.PolySynth(Tone.Synth, {
-      oscillator: { type: 'triangle' },
-      envelope: { attack: 0.02, decay: 0.3, sustain: 0.4, release: 1.2 },
-    }).toDestination();
-    synthRef.current.volume.value = -12;
-    return () => { synthRef.current?.dispose(); };
-  }, []);
-
+export function PianoKeyboard({ stepIndex, currentNote, instrumentName, onSelectNote, onClose }: Props) {
   // Keyboard shortcuts — capture phase to intercept before App.tsx handlers
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -58,11 +48,10 @@ export function PianoKeyboard({ stepIndex, currentNote, onSelectNote, onClose }:
     return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [onSelectNote, onClose]);
 
-  const handleNoteClick = async (note: string) => {
-    try {
-      await Tone.start();
-      synthRef.current?.triggerAttackRelease(note, '8n');
-    } catch {}
+  const handleNoteClick = (note: string) => {
+    if (instrumentName) {
+      previewInstrument(instrumentName, note);
+    }
     onSelectNote(note);
   };
 
@@ -72,7 +61,7 @@ export function PianoKeyboard({ stepIndex, currentNote, onSelectNote, onClose }:
     <div className={styles.pianoZone}>
       <div className={styles.pianoHeader}>
         <span className={styles.pianoTitle}>
-          Step {stepIndex + 1}
+          {instrumentName && <span>{instrumentName} — </span>}Step {stepIndex + 1}
           {currentNote && <span className={styles.currentNote}> — {currentNote}</span>}
         </span>
         <div className={styles.headerActions}>

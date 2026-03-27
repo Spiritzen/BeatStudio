@@ -47,7 +47,7 @@
 ### 🎛️ Séquenceur
 - Grille de steps globale — **8 à 256 steps**, snap au multiple de 4
 - **8 pistes** par défaut, nombre illimité ajoutables
-- **26 instruments** synthétiques organisés en 3 catégories
+- **29 instruments** synthétiques organisés en 3 catégories
 - Playhead animé synchronisé avec `Tone.Transport`
 - BPM réglable en temps réel — 40 à 240 BPM
 - Boucle automatique infinie
@@ -56,13 +56,14 @@
 - **Preview sonore** au clic sur chaque instrument
 - **Prefabs** — patterns prédéfinis chargeables en un clic
 
-### 🎹 Instruments — 26 sons synthétiques
+### 🎹 Instruments — 29 sons synthétiques
+
+**Mélodique** (avec clavier de notes 4 octaves)
+`Piano` · `Bass Synth` · `Lead Synth` · `Pad` · `Pluck` · `Bell`
+`Marimba` · `Organ` · `Flute` · `Guitare Acoustique` · `Guitare Électrique` · `Lyre`
 
 **Percussions**
 `Kick` · `Snare` · `Clap` · `HiHat` · `OpenHat` · `Tom Hi` · `Tom Mid` · `Tom Floor` · `Rimshot` · `Cowbell` · `Tambourine` · `Conga`
-
-**Mélodique**
-`Bass Synth` · `Lead Synth` · `Pad` · `Pluck` · `Bell` · `Marimba` · `Organ` · `Flute`
 
 **FX**
 `Noise` · `Zap` · `Laser` · `Sweep` · `Boom` · `Riser`
@@ -87,7 +88,7 @@
 - **Export JSON** — pattern complet incluant les effets par piste
 - **Import JSON** — chargement fidèle pistes + effets
 - **Bouton Charger** — import JSON depuis la TopBar avec confirmation
-- **Prefabs** — bibliothèque de patterns prédéfinis (Default · Zelda Theme)
+- **Prefabs** — bibliothèque de patterns prédéfinis (Default · Zelda Theme · Jingle Bells Rock)
 - **Export WAV réel** — capture MediaRecorder → encodage PCM 16bit
 - **Copier pattern** — JSON dans le presse-papier
 
@@ -226,6 +227,16 @@ Le pattern exporté est un fichier JSON lisible et portable, **effets inclus** :
 ---
 
 ## 📋 Changelog
+
+### v1.2.2 — Instruments mélodiques + Clavier universel + Prefabs enrichis
+
+- ✨ Clavier de notes étendu à tous les instruments mélodiques (Bass Synth · Lead Synth · Pad · Pluck · Bell · Marimba · Organ · Flute)
+- ✨ 3 nouveaux instruments — Guitare Acoustique · Guitare Électrique · Lyre
+- ✨ Piano déplacé dans la section Mélodique (UX cohérente)
+- ✨ Preview clavier joue le son de l'instrument sélectionné (pas Piano générique)
+- ✨ 1 nouveau prefab — Jingle Bells Rock
+- 🐛 Fix : clavier virtuel preview utilisait toujours le son Piano
+- 🐛 Fix : instruments mélodiques jouaient Piano au lieu de leur propre son
 
 ### v1.2.1 — Export WAV · Prefabs · Preview instruments · Charger
 

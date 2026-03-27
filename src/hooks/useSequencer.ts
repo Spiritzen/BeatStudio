@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import * as Tone from 'tone';
 import type { Track, InstrumentName } from '../types';
-import { createSynth, getTriggerNote, isNoiseBased } from '../utils/synths';
+import { createSynth, getTriggerNote, isNoiseBased, isMelodic } from '../utils/synths';
 import { createFxChain, updateFxChain, disposeFxChain, type TrackFxChain } from '../utils/effects';
 
 type AnyToneInstrument =
@@ -16,6 +16,20 @@ interface TrackNode {
   synth: AnyToneInstrument;
   player: Tone.Player | null;
   fx: TrackFxChain;
+  instrumentName: InstrumentName;
+}
+
+function triggerMelodicInstrument(synth: AnyToneInstrument, instrument: InstrumentName, note: string, time: number): void {
+  if (synth instanceof Tone.PolySynth) {
+    (synth as Tone.PolySynth).triggerAttackRelease(note, '8n', time);
+  } else if (synth instanceof Tone.PluckSynth) {
+    (synth as Tone.PluckSynth).triggerAttack(note, time);
+  } else if (synth instanceof Tone.MetalSynth) {
+    (synth as Tone.MetalSynth).triggerAttackRelease('16n', time);
+  } else {
+    const duration = ['Pad', 'Organ', 'Sweep', 'Riser'].includes(instrument) ? '4n' : '8n';
+    (synth as Tone.Synth).triggerAttackRelease(note, duration, time);
+  }
 }
 
 function triggerInstrument(synth: AnyToneInstrument, instrument: InstrumentName, time: number): void {
@@ -68,6 +82,13 @@ export function useSequencer(tracks: Track[], bpm: number, globalSteps: number, 
     for (const track of tracks) {
       const node = trackNodesRef.current.get(track.id);
       if (node) {
+        // Recréer le synth si l'instrument a changé
+        if (node.instrumentName !== track.instrument) {
+          node.synth.dispose();
+          node.synth = createSynth(track.instrument);
+          node.synth.connect(node.fx.distortion);
+          node.instrumentName = track.instrument;
+        }
         updateFxChain(node.fx, track.fx, track.volume, track.pan);
         node.fx.channel.mute = track.muted || (hasSolo && !track.soloed);
       }
@@ -85,7 +106,7 @@ export function useSequencer(tracks: Track[], bpm: number, globalSteps: number, 
           player = new Tone.Player(track.sampleUrl).connect(fx.distortion);
         }
         updateFxChain(fx, track.fx, track.volume, track.pan);
-        trackNodesRef.current.set(track.id, { synth, player, fx });
+        trackNodesRef.current.set(track.id, { synth, player, fx, instrumentName: track.instrument });
       }
     }
   }, []);
@@ -114,14 +135,15 @@ export function useSequencer(tracks: Track[], bpm: number, globalSteps: number, 
         for (const track of currentTracks) {
           const shouldMute = track.muted || (hasSolo && !track.soloed);
 
-          if (track.pianoSteps) {
-            // Piano track — joue la note assignée au step
+          if (track.pianoSteps && isMelodic(track.instrument)) {
+            // Piste mélodique — joue la note assignée ou la note par défaut
             const pianoStep = track.pianoSteps[stepIndex as number];
-            if (!pianoStep?.active || !pianoStep.note || shouldMute) continue;
+            if (!pianoStep?.active || shouldMute) continue;
             const node = trackNodesRef.current.get(track.id);
             if (!node) continue;
             try {
-              (node.synth as Tone.PolySynth).triggerAttackRelease(pianoStep.note, '8n', time);
+              const note = pianoStep.note || getTriggerNote(track.instrument);
+              triggerMelodicInstrument(node.synth, track.instrument, note, time);
             } catch {}
           } else {
             // Piste normale

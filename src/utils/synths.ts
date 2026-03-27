@@ -213,6 +213,28 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
         volume: 0,
       });
 
+    case 'Guitare Acoustique':
+      return new Tone.PluckSynth({
+        attackNoise: 2.5,
+        dampening: 3000,
+        resonance: 0.96,
+        volume: 6,
+      });
+
+    case 'Guitare Électrique':
+      return new Tone.Synth({
+        oscillator: { type: 'sawtooth' },
+        envelope: { attack: 0.005, decay: 0.1, sustain: 0.6, release: 0.8 },
+        volume: 2,
+      });
+
+    case 'Lyre':
+      return new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.02, decay: 0.8, sustain: 0.2, release: 2.0 },
+        volume: -4,
+      });
+
     default:
       return new Tone.Synth();
   }
@@ -239,12 +261,15 @@ export function getTriggerNote(name: InstrumentName): string {
     case 'Riser': return 'G2';
     case 'Rimshot': return 'C5';
     case 'Cowbell': return 'F4';
+    case 'Guitare Acoustique': return 'E3';
+    case 'Guitare Électrique': return 'E3';
+    case 'Lyre': return 'A4';
     default: return 'C4';
   }
 }
 
 export function isMelodic(name: InstrumentName): boolean {
-  const melodic: InstrumentName[] = ['Bass Synth', 'Lead Synth', 'Pad', 'Pluck', 'Bell', 'Marimba', 'Organ', 'Flute', 'Zap', 'Laser', 'Sweep', 'Riser', 'Rimshot', 'Cowbell'];
+  const melodic: InstrumentName[] = ['Piano', 'Bass Synth', 'Lead Synth', 'Pad', 'Pluck', 'Bell', 'Marimba', 'Organ', 'Flute', 'Guitare Acoustique', 'Guitare Électrique', 'Lyre', 'Sweep', 'Riser', 'Laser', 'Zap'];
   return melodic.includes(name);
 }
 
