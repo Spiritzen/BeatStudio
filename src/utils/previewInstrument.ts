@@ -2,9 +2,8 @@ import * as Tone from 'tone'
 
 export const previewInstrument = async (instName: string, note?: string): Promise<void> => {
   try {
-    if (Tone.context.state !== 'running') {
-      await Tone.start()
-    }
+    await Tone.start()
+    await Tone.getContext().rawContext.resume()
 
     const now = Tone.now()
     const t = instName.toLowerCase()

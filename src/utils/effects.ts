@@ -1,5 +1,6 @@
 import * as Tone from 'tone';
 import type { FxParams } from '../types';
+import { isMobileDevice } from './deviceDetect';
 
 export interface TrackFxChain {
   reverb: Tone.Reverb;
@@ -9,6 +10,7 @@ export interface TrackFxChain {
   volume: Tone.Volume;
   panner: Tone.Panner;
   channel: Tone.Channel;
+  limiter: Tone.Limiter;
 }
 
 export function createFxChain(): TrackFxChain {
@@ -18,9 +20,10 @@ export function createFxChain(): TrackFxChain {
   const filter = new Tone.Filter({ frequency: 20000, type: 'lowpass' });
   const volume = new Tone.Volume(0);
   const panner = new Tone.Panner(0);
-  const channel = new Tone.Channel().toDestination();
+  const limiter = new Tone.Limiter(isMobileDevice() ? -6 : -3).toDestination();
+  const channel = new Tone.Channel().connect(limiter);
 
-  // Chain: instrument → distortion → filter → reverb → delay → volume → panner → channel → out
+  // Chain: instrument → distortion → filter → reverb → delay → volume → panner → channel → limiter → out
   distortion.connect(filter);
   filter.connect(reverb);
   reverb.connect(delay);
@@ -28,7 +31,7 @@ export function createFxChain(): TrackFxChain {
   volume.connect(panner);
   panner.connect(channel);
 
-  return { reverb, delay, distortion, filter, volume, panner, channel };
+  return { reverb, delay, distortion, filter, volume, panner, channel, limiter };
 }
 
 export function updateFxChain(chain: TrackFxChain, fx: FxParams, volume: number, pan: number): void {
@@ -55,4 +58,5 @@ export function disposeFxChain(chain: TrackFxChain): void {
   chain.volume.dispose();
   chain.panner.dispose();
   chain.channel.dispose();
+  chain.limiter.dispose();
 }

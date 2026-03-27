@@ -3,6 +3,7 @@ import * as Tone from 'tone';
 import type { Track, InstrumentName } from '../types';
 import { createSynth, getTriggerNote, isNoiseBased, isMelodic } from '../utils/synths';
 import { createFxChain, updateFxChain, disposeFxChain, type TrackFxChain } from '../utils/effects';
+import { isMobileDevice } from '../utils/deviceDetect';
 
 type AnyToneInstrument =
   | Tone.MembraneSynth
@@ -91,6 +92,18 @@ export function useSequencer(tracks: Track[], bpm: number, globalSteps: number, 
         }
         updateFxChain(node.fx, track.fx, track.volume, track.pan);
         node.fx.channel.mute = track.muted || (hasSolo && !track.soloed);
+      } else {
+        // Nouvelle piste (ex: chargement prefab) — créer le node immédiatement
+        const fx = createFxChain();
+        const synth = createSynth(track.instrument);
+        synth.connect(fx.distortion);
+        let player: Tone.Player | null = null;
+        if (track.sampleUrl) {
+          player = new Tone.Player(track.sampleUrl).connect(fx.distortion);
+        }
+        updateFxChain(fx, track.fx, track.volume, track.pan);
+        fx.channel.mute = track.muted || (hasSolo && !track.soloed);
+        trackNodesRef.current.set(track.id, { synth, player, fx, instrumentName: track.instrument });
       }
     }
   }, [tracks]);
@@ -124,7 +137,11 @@ export function useSequencer(tracks: Track[], bpm: number, globalSteps: number, 
     const stepIndices = Array.from({ length: steps }, (_, i) => i);
 
     const sequence = new Tone.Sequence(
-      (time, stepIndex) => {
+      async (time, stepIndex) => {
+        if (Tone.getContext().rawContext.state === 'suspended') {
+          try { await Tone.getContext().rawContext.resume(); } catch {}
+        }
+
         const currentTracks = tracksRef.current;
         const hasSolo = currentTracks.some(t => t.soloed);
 
@@ -177,9 +194,25 @@ export function useSequencer(tracks: Track[], bpm: number, globalSteps: number, 
     }
   }, [globalSteps, ensureNodes, buildAndStartSequence]);
 
+  // Keepalive — Android suspend l'AudioContext après inactivité
+  useEffect(() => {
+    if (!isPlaying) return;
+    const keepAlive = setInterval(async () => {
+      if (Tone.getContext().rawContext.state === 'suspended') {
+        try { await Tone.getContext().rawContext.resume(); } catch {}
+      }
+    }, 1000);
+    return () => clearInterval(keepAlive);
+  }, [isPlaying]);
+
   const startAudio = useCallback(async () => {
-    if (!audioStarted.current) {
+    try {
       await Tone.start();
+      await Tone.getContext().rawContext.resume();
+    } catch(e) {
+      console.warn('Tone.start error:', e);
+    }
+    if (!audioStarted.current) {
       audioStarted.current = true;
     }
   }, []);
@@ -187,6 +220,10 @@ export function useSequencer(tracks: Track[], bpm: number, globalSteps: number, 
   const play = useCallback(async () => {
     await startAudio();
     ensureNodes();
+    // Petit délai sur mobile pour laisser les synths s'initialiser
+    if (isMobileDevice()) {
+      await new Promise(r => setTimeout(r, 100));
+    }
     buildAndStartSequence(globalSteps);
     setIsPlaying(true);
     setCurrentStep(0);

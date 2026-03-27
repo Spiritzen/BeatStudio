@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import type { Track } from '../../types';
 import { StepCell } from './StepCell';
 import { Playhead } from './Playhead';
@@ -29,7 +29,50 @@ export function CenterGrid({
   selectedTrackId, onSelectTrack, zoom = 1,
 }: CenterGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const userScrollingRef = useRef(false);
+  const userScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedPianoStep, setSelectedPianoStep] = useState<{ trackId: string; stepIndex: number } | null>(null);
+
+  // Detect manual scroll → pause auto-scroll for 2 seconds
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const handleUserScroll = () => {
+      userScrollingRef.current = true;
+      if (userScrollTimeoutRef.current) clearTimeout(userScrollTimeoutRef.current);
+      userScrollTimeoutRef.current = setTimeout(() => {
+        userScrollingRef.current = false;
+      }, 2000);
+    };
+    container.addEventListener('scroll', handleUserScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleUserScroll);
+  }, []);
+
+  // Auto-scroll to keep playhead centred while playing
+  useEffect(() => {
+    if (!isPlaying || !containerRef.current) return;
+    if (userScrollingRef.current) return;
+
+    const container = containerRef.current;
+    const containerWidth = container.clientWidth;
+
+    // Same X formula as Playhead component
+    const barsBefore = Math.floor(currentStep / 4);
+    const playheadX = currentStep * (STEP_W + STEP_GAP) + barsBefore * 4 + STEP_W / 2;
+
+    const threshold = containerWidth / 2;
+
+    if (playheadX - container.scrollLeft >= threshold) {
+      container.scrollTo({ left: playheadX - threshold, behavior: 'smooth' });
+    }
+  }, [currentStep, isPlaying]);
+
+  // Reset scroll to start when playback stops
+  useEffect(() => {
+    if (!isPlaying && containerRef.current) {
+      containerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+    }
+  }, [isPlaying]);
 
   const beatNumbers = Array.from({ length: globalSteps }, (_, i) => i);
 

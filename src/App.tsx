@@ -7,6 +7,7 @@ import { Footer } from './components/Footer';
 import { WelcomeModal } from './components/WelcomeModal';
 import { usePattern } from './hooks/usePattern';
 import { useSequencer } from './hooks/useSequencer';
+import { isMobileDevice } from './utils/deviceDetect';
 import type { Track, InstrumentName, Pattern } from './types';
 import './styles/globals.css';
 import './App.css';
@@ -15,6 +16,7 @@ export default function App() {
   const [mode, setMode] = useState<'tone' | 'sample'>('tone');
   const [zoom, setZoom] = useState(1);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [mobileOverride, setMobileOverride] = useState(false);
 
   const handleZoomChange = (val: number) => {
     setZoom(Math.round(Math.max(0.5, Math.min(2, val)) * 10) / 10);
@@ -117,6 +119,54 @@ export default function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [togglePlay, undo, handleSavePattern, patternName, selectedTrackId, duplicateTrack, toggleMute]);
+
+  // ── Écran mobile ─────────────────────────────────────────────────
+  if (isMobileDevice() && !mobileOverride) {
+    return (
+      <div style={{
+        position: 'fixed', inset: 0,
+        background: '#13131f',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        gap: '20px', padding: '32px',
+        fontFamily: 'sans-serif',
+      }}>
+        <div style={{ fontSize: '52px' }}>🖥️</div>
+        <p style={{ fontSize: '18px', fontWeight: 700, color: '#7c3aed', margin: 0, textAlign: 'center' }}>
+          BeatStudio
+        </p>
+        <p style={{ fontSize: '14px', color: '#9090b0', textAlign: 'center', lineHeight: 1.6, margin: 0 }}>
+          BeatStudio est optimisé pour une utilisation sur ordinateur.
+          Pour une expérience complète, ouvrez cette page sur desktop.
+        </p>
+        <a
+          href={window.location.href}
+          style={{
+            fontSize: '13px', color: '#7c3aed',
+            textDecoration: 'underline', margin: 0,
+          }}
+        >
+          Ouvrir sur desktop
+        </a>
+        <button
+          onClick={() => setMobileOverride(true)}
+          style={{
+            marginTop: '8px',
+            padding: '10px 20px',
+            background: 'transparent',
+            border: '1px solid #444',
+            borderRadius: '6px',
+            color: '#9090b0',
+            fontSize: '13px',
+            cursor: 'pointer',
+          }}
+        >
+          Continuer quand même
+        </button>
+      </div>
+    );
+  }
+  // ─────────────────────────────────────────────────────────────────
 
   return (
     <>

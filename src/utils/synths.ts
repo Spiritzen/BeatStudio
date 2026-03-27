@@ -1,5 +1,8 @@
 import * as Tone from 'tone';
 import type { InstrumentName } from '../types';
+import { isMobileDevice } from './deviceDetect';
+
+const mobile = isMobileDevice();
 
 type AnyToneInstrument =
   | Tone.MembraneSynth
@@ -79,6 +82,11 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
       });
 
     case 'Cowbell':
+      if (mobile) return new Tone.Synth({
+        oscillator: { type: 'sine' },
+        envelope: { attack: 0.001, decay: 0.4, sustain: 0.1, release: 0.8 },
+        volume: -2,
+      });
       return new Tone.MetalSynth({
         envelope: { attack: 0.001, decay: 0.4, release: 0.1 },
         harmonicity: 5.1,
@@ -117,14 +125,22 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
         volume: 6,
       });
 
-    case 'Pad':
-      return new Tone.PolySynth(Tone.Synth, {
+    case 'Pad': {
+      const padSynth = new Tone.PolySynth(Tone.Synth, {
         oscillator: { type: 'sine' },
         envelope: { attack: 0.3, decay: 0.2, sustain: 0.8, release: 1.0 },
-        volume: 6,
+        volume: mobile ? -2 : 6,
       });
+      if (mobile) padSynth.maxPolyphony = 2;
+      return padSynth;
+    }
 
     case 'Pluck':
+      if (mobile) return new Tone.Synth({
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.001, decay: 0.3, sustain: 0.05, release: 0.3 },
+        volume: -2,
+      });
       return new Tone.PluckSynth({
         attackNoise: 1,
         dampening: 4000,
@@ -133,6 +149,11 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
       });
 
     case 'Bell':
+      if (mobile) return new Tone.Synth({
+        oscillator: { type: 'sine' },
+        envelope: { attack: 0.001, decay: 1.0, sustain: 0.1, release: 1.5 },
+        volume: -4,
+      });
       return new Tone.MetalSynth({
         envelope: { attack: 0.001, decay: 1.2, release: 0.8 },
         harmonicity: 5.1,
@@ -206,14 +227,22 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
         volume: 6,
       });
 
-    case 'Piano':
-      return new Tone.PolySynth(Tone.Synth, {
+    case 'Piano': {
+      const pianoSynth = new Tone.PolySynth(Tone.Synth, {
         oscillator: { type: 'triangle' },
         envelope: { attack: 0.02, decay: 0.3, sustain: 0.4, release: 1.2 },
-        volume: 0,
+        volume: mobile ? -4 : 0,
       });
+      if (mobile) pianoSynth.maxPolyphony = 2;
+      return pianoSynth;
+    }
 
     case 'Guitare Acoustique':
+      if (mobile) return new Tone.Synth({
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.001, decay: 0.4, sustain: 0.05, release: 0.4 },
+        volume: -2,
+      });
       return new Tone.PluckSynth({
         attackNoise: 2.5,
         dampening: 3000,
@@ -228,12 +257,15 @@ export function createSynth(name: InstrumentName): AnyToneInstrument {
         volume: 2,
       });
 
-    case 'Lyre':
-      return new Tone.PolySynth(Tone.Synth, {
+    case 'Lyre': {
+      const lyreSynth = new Tone.PolySynth(Tone.Synth, {
         oscillator: { type: 'triangle' },
         envelope: { attack: 0.02, decay: 0.8, sustain: 0.2, release: 2.0 },
-        volume: -4,
+        volume: mobile ? -6 : -4,
       });
+      if (mobile) lyreSynth.maxPolyphony = 2;
+      return lyreSynth;
+    }
 
     default:
       return new Tone.Synth();
