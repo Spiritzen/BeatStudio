@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import type { Track } from '../../types';
 import { StepCell } from './StepCell';
 import { Playhead } from './Playhead';
@@ -29,50 +29,60 @@ export function CenterGrid({
   selectedTrackId, onSelectTrack, zoom = 1,
 }: CenterGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const userScrollingRef = useRef(false);
-  const userScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const targetScrollRef = useRef(0);
+  const currentScrollRef = useRef(0);
   const [selectedPianoStep, setSelectedPianoStep] = useState<{ trackId: string; stepIndex: number } | null>(null);
 
-  // Detect manual scroll → pause auto-scroll for 2 seconds
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const handleUserScroll = () => {
-      userScrollingRef.current = true;
-      if (userScrollTimeoutRef.current) clearTimeout(userScrollTimeoutRef.current);
-      userScrollTimeoutRef.current = setTimeout(() => {
-        userScrollingRef.current = false;
-      }, 2000);
-    };
-    container.addEventListener('scroll', handleUserScroll, { passive: true });
-    return () => container.removeEventListener('scroll', handleUserScroll);
+  const animateScroll = useCallback(() => {
+    if (!containerRef.current) return;
+    const diff = targetScrollRef.current - currentScrollRef.current;
+    if (Math.abs(diff) < 0.5) {
+      containerRef.current.scrollLeft = targetScrollRef.current;
+      currentScrollRef.current = targetScrollRef.current;
+      return;
+    }
+    currentScrollRef.current += diff * 0.12;
+    containerRef.current.scrollLeft = currentScrollRef.current;
+    rafRef.current = requestAnimationFrame(animateScroll);
   }, []);
 
-  // Auto-scroll to keep playhead centred while playing
+  // Auto-scroll: keep playhead centred once it passes the midpoint
   useEffect(() => {
     if (!isPlaying || !containerRef.current) return;
-    if (userScrollingRef.current) return;
 
     const container = containerRef.current;
+    const firstCell = container.querySelector('[class*="step-cell"]') as HTMLElement | null;
+    const stepWidth = firstCell
+      ? firstCell.getBoundingClientRect().width + 4
+      : STEP_W + STEP_GAP;
+
     const containerWidth = container.clientWidth;
+    const halfContainer = containerWidth / 2;
+    const playheadPixel = currentStep * stepWidth;
 
-    // Same X formula as Playhead component
-    const barsBefore = Math.floor(currentStep / 4);
-    const playheadX = currentStep * (STEP_W + STEP_GAP) + barsBefore * 4 + STEP_W / 2;
+    targetScrollRef.current = playheadPixel < halfContainer
+      ? 0
+      : playheadPixel - halfContainer;
 
-    const threshold = containerWidth / 2;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(animateScroll);
+  }, [currentStep, isPlaying, animateScroll]);
 
-    if (playheadX - container.scrollLeft >= threshold) {
-      container.scrollTo({ left: playheadX - threshold, behavior: 'smooth' });
-    }
-  }, [currentStep, isPlaying]);
-
-  // Reset scroll to start when playback stops
+  // Smooth return to start on stop
   useEffect(() => {
     if (!isPlaying && containerRef.current) {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      targetScrollRef.current = 0;
+      currentScrollRef.current = 0;
       containerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
     }
   }, [isPlaying]);
+
+  // Cleanup RAF on unmount
+  useEffect(() => {
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, []);
 
   const beatNumbers = Array.from({ length: globalSteps }, (_, i) => i);
 

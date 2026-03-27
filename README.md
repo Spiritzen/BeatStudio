@@ -97,6 +97,8 @@
 - Style dark inspiré d'**EasyStudio**
 - **Titre du pattern** éditable dans la TopBar
 - **Footer 2 barres** — raccourcis clavier + liens auteur
+- **Follow Playhead** — grille défile automatiquement, style DAW professionnel (Ableton / FL Studio)
+- **Message mobile** — invitation à utiliser la version desktop
 - Raccourcis clavier complets
 
 ---
@@ -227,6 +229,15 @@ Le pattern exporté est un fichier JSON lisible et portable, **effets inclus** :
 ---
 
 ## 📋 Changelog
+
+### v1.2.3 — Follow Playhead + Mobile message
+
+- ✨ Follow Playhead — la grille défile automatiquement pendant la lecture, le playhead reste centré (style DAW pro)
+- ✨ Début de lecture → grille fixe, playhead avance normalement
+- ✨ Milieu → grille défile en douceur (requestAnimationFrame)
+- ✨ Stop → retour smooth au début
+- ✨ Message "Version desktop recommandée" sur mobile avec option "Continuer quand même"
+- 🐛 Fix : suppression de la ligne verticale intrusive
 
 ### v1.2.2 — Instruments mélodiques + Clavier universel + Prefabs enrichis
 
