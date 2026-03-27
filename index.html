@@ -3,12 +3,42 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/BeatStudio/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>BeatStudio — Step Sequencer</title>
-    <script type="module" crossorigin src="/BeatStudio/assets/index-DJDQxlPf.js"></script>
+    <script type="module" crossorigin src="/BeatStudio/assets/index-CnYASdZd.js"></script>
     <link rel="stylesheet" crossorigin href="/BeatStudio/assets/index-CWUHRl8S.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"></div>
+    <script>
+      // Débloquer Web Audio API au premier touch sur Android
+      document.addEventListener('touchstart', function unlock() {
+        try {
+          var ctx = new (window.AudioContext || window.webkitAudioContext)()
+          ctx.resume()
+        } catch(e) {}
+        document.removeEventListener('touchstart', unlock)
+      }, { once: true })
+
+      // Relancer le contexte audio si l'app revient au premier plan
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+          try {
+            if (window.Tone && window.Tone.getContext().rawContext.state === 'suspended') {
+              window.Tone.getContext().rawContext.resume()
+            }
+          } catch(e) {}
+        }
+      })
+
+      // Resume sur chaque touch (Android suspend après inactivité)
+      document.addEventListener('touchstart', function() {
+        try {
+          if (window.Tone && window.Tone.getContext().rawContext.state === 'suspended') {
+            window.Tone.getContext().rawContext.resume()
+          }
+        } catch(e) {}
+      }, { passive: true })
+    </script>
   </body>
 </html>
