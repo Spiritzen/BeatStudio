@@ -114,8 +114,19 @@ export function Footer({ zoom, onZoomChange }: FooterProps) {
             <IconMail /><span>Contact</span>
           </a>
           <span className={styles.dot}>·</span>
-          <a href="/images/CV_Sebastien_Cantrelle.pdf" download
-             className={`${styles.link} ${styles.linkCV}`}>
+          <a
+            href="/CV_Sebastien_Cantrelle.pdf"
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => {
+              const link = document.createElement('a');
+              link.href = '/CV_Sebastien_Cantrelle.pdf';
+              link.download = 'CV_Sebastien_Cantrelle.pdf';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
+            className={`${styles.link} ${styles.linkCV}`}>
             <IconDownload /><span>CV</span>
           </a>
         </div>
