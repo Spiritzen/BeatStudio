@@ -115,12 +115,14 @@ export function Footer({ zoom, onZoomChange }: FooterProps) {
           </a>
           <span className={styles.dot}>·</span>
           <a
-            href="/CV_Sebastien_Cantrelle.pdf"
+            href="CV_Sebastien_Cantrelle.pdf"
             target="_blank"
             rel="noreferrer"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              window.open('CV_Sebastien_Cantrelle.pdf', '_blank');
               const link = document.createElement('a');
-              link.href = '/CV_Sebastien_Cantrelle.pdf';
+              link.href = 'CV_Sebastien_Cantrelle.pdf';
               link.download = 'CV_Sebastien_Cantrelle.pdf';
               document.body.appendChild(link);
               link.click();
