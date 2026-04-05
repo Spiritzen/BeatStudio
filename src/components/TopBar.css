@@ -798,6 +798,53 @@ font-size: 9px;
     inset 0 0 12px rgba(124, 58, 237, 0.3);
 }
 
+/* ── Bouton Premium TopBar ───────────────────────────────────── */
+.topbar-premium-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid #7c3aed;
+  color: #7c3aed;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  animation: topbarPremiumPulse 3s ease-in-out infinite;
+  transition: all 0.15s;
+}
+
+.topbar-premium-btn:hover {
+  background: #7c3aed;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.4);
+  animation: none;
+}
+
+@keyframes topbarPremiumPulse {
+  0%, 100% { border-color: #7c3aed; }
+  50% { border-color: #a855f7; box-shadow: 0 0 8px rgba(124, 58, 237, 0.3); }
+}
+
+/* Badge statut Premium actif — discret */
+.topbar-premium-active {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.4);
+  color: #a78bfa;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: default;
+  white-space: nowrap;
+}
+
 .premium-badge-best {
   font-size: 10px;
   background: linear-gradient(135deg, #7c3aed, #a78bfa);

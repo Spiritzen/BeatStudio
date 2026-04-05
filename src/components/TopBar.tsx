@@ -63,6 +63,7 @@ export function TopBar({
   const [localName, setLocalName] = useState(patternName);
   const [showPremiumModal, setShowPremiumModal] = useState(false)
   const [showCheckout, setShowCheckout] = useState(false)
+  const [userIsPremium, setUserIsPremium] = useState(isPremium())
 
   const commitName = () => {
     setEditingName(false);
@@ -356,6 +357,30 @@ const handleExportWav = async () => {
           </span>
         )}
 
+        {/* 💎 Bouton Premium — point d'entrée conversion */}
+        {!userIsPremium ? (
+          <button
+            className="topbar-premium-btn"
+            onClick={() => {
+              console.log('📊 [TRACK] topbar_premium_clicked', { timestamp: new Date().toISOString() });
+              setShowCheckout(true);
+            }}
+            title="Passer à BeatStudio Premium"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+            </svg>
+            Premium
+          </button>
+        ) : (
+          <div className="topbar-premium-active" title="BeatStudio Premium actif">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+            </svg>
+            Premium
+          </div>
+        )}
+
         {/* Prefabs dropdown */}
         <div className="prefabs-wrap">
           <button
@@ -600,7 +625,7 @@ const handleExportWav = async () => {
           }}
           onSuccess={() => {
             setShowCheckout(false);
-            window.location.reload();
+            setUserIsPremium(true);
           }}
         />
       )}
