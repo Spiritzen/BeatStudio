@@ -1,0 +1,269 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal {
+  background: #1e1e30;
+  border: 1px solid #2e2e4a;
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: 1px solid #2e2e4a;
+  color: #9090b0;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.closeBtn:hover { color: #ef4444; border-color: #ef4444; }
+
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.badge {
+  display: inline-block;
+  background: rgba(124, 58, 237, 0.2);
+  color: #7c3aed;
+  border: 1px solid #7c3aed;
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #e2e2f0;
+  margin: 0 0 6px;
+}
+
+.header p {
+  font-size: 13px;
+  color: #9090b0;
+  margin: 0;
+}
+
+.pricing {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+}
+
+.amount {
+  font-size: 42px;
+  font-weight: 700;
+  color: #7c3aed;
+}
+
+.period {
+  font-size: 16px;
+  color: #9090b0;
+}
+
+.priceSub {
+  font-size: 12px;
+  color: #55556a;
+  margin: 4px 0 0;
+}
+
+.features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.features li {
+  font-size: 14px;
+  color: #c0c0d8;
+  padding: 8px 12px;
+  background: #252538;
+  border-radius: 8px;
+}
+
+.ctaBtn {
+  width: 100%;
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-bottom: 12px;
+}
+.ctaBtn:hover { background: #6d28d9; }
+
+.payBtn {
+  width: 100%;
+  background: #10b981;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-bottom: 12px;
+}
+.payBtn:hover { background: #059669; }
+.payBtn:disabled {
+  background: #374151;
+  cursor: not-allowed;
+  color: #6b7280;
+}
+
+.legal {
+  text-align: center;
+  font-size: 11px;
+  color: #55556a;
+  margin: 0 0 12px;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: #9090b0;
+  font-size: 12px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  padding: 4px;
+}
+.backBtn:hover { color: #e2e2f0; }
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 12px;
+  color: #9090b0;
+  font-weight: 500;
+}
+
+.field input {
+  background: #13131f;
+  border: 1px solid #2e2e4a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #e2e2f0;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.field input:focus { border-color: #7c3aed; }
+.field input::placeholder { color: #3a3a55; }
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.cardInput {
+  position: relative;
+}
+.cardInput input { width: 100%; padding-right: 40px; box-sizing: border-box; }
+.cardIcons {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+}
+
+.error {
+  font-size: 11px;
+  color: #ef4444;
+}
+
+.summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #252538;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #e2e2f0;
+  font-weight: 500;
+}
+
+.success {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.successIcon {
+  width: 64px;
+  height: 64px;
+  background: rgba(16, 185, 129, 0.2);
+  border: 2px solid #10b981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #10b981;
+  margin: 0 auto 20px;
+}
+
+.success h2 {
+  font-size: 18px;
+  color: #e2e2f0;
+  margin: 0 0 10px;
+}
+
+.success p {
+  font-size: 14px;
+  color: #9090b0;
+  margin: 0 0 8px;
+}

@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Pattern } from '../types';
+import { supabase } from '../lib/supabaseClient'
 import { exportJson, copyPatternToClipboard, exportWav } from '../hooks/useExport';
+import { isPremium } from '../store/premium';
+import { FakeCheckoutModal } from './FakeCheckoutModal';
 import './TopBar.css';
 
 interface TopBarProps {
@@ -48,7 +51,9 @@ const PREFABS: Prefab[] = [
   },
 ];
 
+
 export function TopBar({
+  
   isPlaying, bpm, globalSteps, mode, patternName, isDirty,
   onTogglePlay, onBpmChange, onStepsChange, onModeChange,
   onSave, onPatternNameChange, onExportPattern, onImportPattern,
@@ -56,6 +61,8 @@ export function TopBar({
   const [stepsInput, setStepsInput] = useState(String(globalSteps));
   const [editingName, setEditingName] = useState(false);
   const [localName, setLocalName] = useState(patternName);
+  const [showPremiumModal, setShowPremiumModal] = useState(false)
+  const [showCheckout, setShowCheckout] = useState(false)
 
   const commitName = () => {
     setEditingName(false);
@@ -82,6 +89,31 @@ export function TopBar({
   if (String(globalSteps) !== stepsInput && document.activeElement?.className !== 'steps-input') {
     // only sync when not focused
   }
+  const [user, setUser] = useState<any>(null)
+
+useEffect(() => {
+  supabase.auth.getUser().then(({ data }) => {
+    setUser(data.user)
+  })
+
+  const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    setUser(session?.user ?? null)
+  })
+
+  return () => {
+    listener.subscription.unsubscribe()
+  }
+}, [])
+
+const togglePremium = () => {
+  localStorage.setItem('premium', (!isPremium()).toString())
+  window.location.reload()
+}
+
+const handleLogout = async () => {
+  await supabase.auth.signOut()
+}
+
 
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -173,27 +205,44 @@ export function TopBar({
     if (!isNaN(val)) onBpmChange(Math.min(240, Math.max(40, val)));
   };
 
-  const handleExportWav = async () => {
-    setShowExportMenu(false);
-    if (exportStatus !== 'idle') return;
+const executeExport = async () => {
+  if (exportStatus !== 'idle') return;
 
-    const wasPlaying = isPlaying;
+  const wasPlaying = isPlaying;
+  if (!wasPlaying) {
+    onTogglePlay();
+    await new Promise(r => setTimeout(r, 250));
+  }
+
+  try {
+    await exportWav(patternName, globalSteps, bpm, (status) => setExportStatus(status));
+  } catch {
+  } finally {
     if (!wasPlaying) {
       onTogglePlay();
-      await new Promise(r => setTimeout(r, 250));
     }
+    setTimeout(() => setExportStatus('idle'), 3000);
+  }
+};
 
-    try {
-      await exportWav(patternName, globalSteps, bpm, (status) => setExportStatus(status));
-    } catch {
-      // error state set by exportWav
-    } finally {
-      if (!wasPlaying) {
-        onTogglePlay();
-      }
-      setTimeout(() => setExportStatus('idle'), 3000);
-    }
-  };
+const handleExportWav = async () => {
+  setShowExportMenu(false);
+
+  console.log('📊 [TRACK] export_wav_clicked', {
+    isPremium: isPremium(),
+    timestamp: new Date().toISOString(),
+    patternName, bpm, globalSteps,
+  });
+
+  if (!isPremium()) {
+    console.log('📊 [TRACK] premium_modal_opened', { timestamp: new Date().toISOString() });
+    setShowPremiumModal(true);
+    return;
+  }
+
+  console.log('📊 [TRACK] wav_export_started_premium', { timestamp: new Date().toISOString() });
+  await executeExport();
+};
 
   return (
     <header className="topbar">
@@ -254,21 +303,22 @@ export function TopBar({
           )}
         </button>
 
-        <div className="bpm-control">
-          <button className="bpm-btn" onClick={() => handleBpmChange(-1)}>−</button>
-          <div className="bpm-display">
-            <input
-              type="number"
-              min={40}
-              max={240}
-              value={bpm}
-              onChange={handleBpmInput}
-              className="bpm-input"
-            />
-            <span className="bpm-label">BPM</span>
-          </div>
-          <button className="bpm-btn" onClick={() => handleBpmChange(1)}>+</button>
-        </div>
+     <div className="bpm-control">
+  <span className="bpm-label">BPM</span>
+
+  <button className="bpm-btn" onClick={() => handleBpmChange(-1)}>−</button>
+
+  <input
+    type="number"
+    min={40}
+    max={240}
+    value={bpm}
+    onChange={handleBpmInput}
+    className="bpm-input"
+  />
+
+  <button className="bpm-btn" onClick={() => handleBpmChange(1)}>+</button>
+</div>
 
         <div className="steps-control">
           <span className="steps-label">STEPS</span>
@@ -396,6 +446,41 @@ export function TopBar({
             </div>
           )}
         </div>
+        {/* 💎 DEV ONLY */}
+        {!import.meta.env.PROD && (
+          <div
+            className="premium-badge"
+            style={{
+              fontSize: '11px',
+              color: '#f59e0b',
+              border: '1px dashed #f59e0b',
+              borderRadius: '4px',
+              padding: '2px 8px',
+              cursor: 'pointer',
+            }}
+            onClick={togglePremium}
+            title="DEV ONLY — Toggle Premium"
+          >
+            {isPremium() ? '💎 PREMIUM' : '🔓 FREE'} [dev]
+          </div>
+        )}
+
+{/* 👤 USER */}
+{user ? (
+  <>
+    <span className="user-email">
+      {user.email}
+    </span>
+
+    <button className="btn-action logout-btn" onClick={handleLogout}>
+      Logout
+    </button>
+  </>
+) : (
+  <span className="user-email muted">
+    Invité
+  </span>
+)}
       </div>
 
       {showSaveModal && (
@@ -422,6 +507,102 @@ export function TopBar({
             </div>
           </div>
         </div>
+      )}
+{showPremiumModal && (
+  <div className="premium-overlay" onClick={() => setShowPremiumModal(false)}>
+    <div className="premium-modal large" onClick={e => e.stopPropagation()}>
+
+      {/* HEADER */}
+      <div className="premium-header">
+        <span className="premium-icon">💎</span>
+        <h3>Export limité</h3>
+      </div>
+
+      {/* CONTEXTE */}
+      <p className="premium-hero">
+        🎧 Votre morceau est en cours d’enregistrement
+      </p>
+
+      {/* INFO AUDIO (🔥 important conservé) */}
+      <div className="premium-info">
+        ⏱️ Attendez la fin de la lecture pour un rendu optimal
+      </div>
+
+      {/* FREE LIMIT */}
+      <div className="premium-card">
+        <p>
+          Export WAV limité à <strong>20 secondes</strong>
+        </p>
+        <p className="premium-sub">
+          Fade out automatique inclus
+        </p>
+      </div>
+
+     <div className="premium-compare-horizontal">
+
+  {/* GRATUIT */}
+  <div className="premium-col free">
+    <h4>Gratuit</h4>
+    <ul>
+      <li>⏱️ 20 secondes</li>
+      <li>🔉 Qualité standard</li>
+    </ul>
+  </div>
+
+  {/* PREMIUM */}
+  <div className="premium-col premium">
+    <h4>
+  Premium
+  <span className="premium-badge-best">RECOMMANDÉ</span>
+</h4>
+    <ul>
+      <li>🎧 Export complet</li>
+      <li>🔥 Qualité maximale</li>
+      <li>🚀 Futurs packs audio</li>
+    </ul>
+  </div>
+
+</div>
+
+      {/* CTA */}
+      <div className="premium-actions">
+        <button
+          className="premium-btn secondary"
+          onClick={() => {
+            console.log('📊 [TRACK] free_export_accepted', { timestamp: new Date().toISOString() });
+            setShowPremiumModal(false);
+            executeExport();
+          }}
+        >
+          Continuer (limité — 20s)
+        </button>
+
+        <button
+          className="premium-btn primary glow"
+          onClick={() => {
+            console.log('📊 [TRACK] upgrade_cta_clicked', { timestamp: new Date().toISOString() });
+            setShowPremiumModal(false);
+            setShowCheckout(true);
+          }}
+        >
+          💎 Passer Premium
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
+      {showCheckout && (
+        <FakeCheckoutModal
+          onClose={() => {
+            console.log('📊 [TRACK] checkout_abandoned', { step: 'unknown', timestamp: new Date().toISOString() });
+            setShowCheckout(false);
+          }}
+          onSuccess={() => {
+            setShowCheckout(false);
+            window.location.reload();
+          }}
+        />
       )}
     </header>
   );
