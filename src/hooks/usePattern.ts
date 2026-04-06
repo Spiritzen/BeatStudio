@@ -272,7 +272,7 @@ export function usePattern() {
   useEffect(() => {
     const raw = localStorage.getItem('beatstudio-patterns');
     if (!raw) {
-      fetch('/patterns/default.json')
+      fetch(`${import.meta.env.BASE_URL}patterns/default.json`)
         .then(r => r.json())
         .then((p: Pattern) => loadPattern(p))
         .catch(() => {});
