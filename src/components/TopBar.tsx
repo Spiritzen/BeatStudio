@@ -368,14 +368,14 @@ const handleExportWav = async () => {
             title="Passer à BeatStudio Premium"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
-              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+              <path d="M12 2L2 9l10 13L22 9z"/>
             </svg>
             Premium
           </button>
         ) : (
           <div className="topbar-premium-active" title="BeatStudio Premium actif">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+              <path d="M12 2L2 9l10 13L22 9z"/>
             </svg>
             Premium
           </div>

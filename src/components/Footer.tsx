@@ -85,7 +85,7 @@ export function Footer({ zoom, onZoomChange }: FooterProps) {
         </span>
 
         <span className={styles.version}>
-          v1.2.4&nbsp;&nbsp;·&nbsp;&nbsp;Open Source · MIT License
+          v1.2.5&nbsp;&nbsp;·&nbsp;&nbsp;Open Source · MIT License
         </span>
 
         <div className={styles.links}>

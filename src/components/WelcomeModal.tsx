@@ -217,7 +217,7 @@ export const WelcomeModal: React.FC<Props> = ({ onDemo, onNew, onLoad }) => {
         )}
 
         <p className={styles.footer}>
-          v1.2.4 · Open Source · MIT License · Sébastien Cantrelle
+          v1.2.5 · Open Source · MIT License · Sébastien Cantrelle
         </p>
 
       </div>
