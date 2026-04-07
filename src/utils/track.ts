@@ -3,7 +3,7 @@ export async function track(event: string, props?: Record<string, unknown>) {
   if (import.meta.env.DEV) return;
   try {
     const res = await fetch(
-      'https://frauedrzvqfnvqatubg.supabase.co/rest/v1/events',
+      'https://frauedrzvqfvnvqatubg.supabase.co/rest/v1/events',
       {
         method: 'POST',
         headers: {
