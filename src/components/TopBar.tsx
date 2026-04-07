@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabaseClient'
 import { exportJson, copyPatternToClipboard, exportWav } from '../hooks/useExport';
 import { isPremium } from '../store/premium';
 import { FakeCheckoutModal } from './FakeCheckoutModal';
+import { track } from '../utils/track';
+import { supportsMediaRecorder } from '../utils/browserSupport';
 import './TopBar.css';
 
 interface TopBarProps {
@@ -229,19 +231,15 @@ const executeExport = async () => {
 const handleExportWav = async () => {
   setShowExportMenu(false);
 
-  console.log('📊 [TRACK] export_wav_clicked', {
-    isPremium: isPremium(),
-    timestamp: new Date().toISOString(),
-    patternName, bpm, globalSteps,
-  });
+  track('export_wav_clicked', { isPremium: isPremium(), patternName, bpm, globalSteps });
 
   if (!isPremium()) {
-    console.log('📊 [TRACK] premium_modal_opened', { timestamp: new Date().toISOString() });
+    track('premium_modal_opened');
     setShowPremiumModal(true);
     return;
   }
 
-  console.log('📊 [TRACK] wav_export_started_premium', { timestamp: new Date().toISOString() });
+  track('wav_export_started_premium');
   await executeExport();
 };
 
@@ -362,7 +360,7 @@ const handleExportWav = async () => {
           <button
             className="topbar-premium-btn"
             onClick={() => {
-              console.log('📊 [TRACK] topbar_premium_clicked', { timestamp: new Date().toISOString() });
+              track('topbar_premium_clicked');
               setShowCheckout(true);
             }}
             title="Passer à BeatStudio Premium"
@@ -458,13 +456,19 @@ const handleExportWav = async () => {
               <button onClick={() => { exportJson(onExportPattern()); setShowExportMenu(false); }}>
                 Exporter pattern JSON
               </button>
-              <button onClick={handleExportWav} disabled={exportStatus !== 'idle'}>
-                {exportStatus === 'idle' && 'Exporter WAV'}
-                {exportStatus === 'recording' && '⏺ Enregistrement...'}
-                {exportStatus === 'encoding' && '⚙ Encodage...'}
-                {exportStatus === 'done' && '✅ Téléchargé !'}
-                {exportStatus === 'error' && '❌ Erreur — réessayer'}
-              </button>
+              {supportsMediaRecorder() ? (
+                <button onClick={handleExportWav} disabled={exportStatus !== 'idle'}>
+                  {exportStatus === 'idle' && 'Exporter WAV'}
+                  {exportStatus === 'recording' && '⏺ Enregistrement...'}
+                  {exportStatus === 'encoding' && '⚙ Encodage...'}
+                  {exportStatus === 'done' && '✅ Téléchargé !'}
+                  {exportStatus === 'error' && '❌ Erreur — réessayer'}
+                </button>
+              ) : (
+                <button disabled style={{ opacity: 0.45, cursor: 'not-allowed' }} title="MediaRecorder non supporté sur ce navigateur">
+                  Exporter WAV — utilisez Chrome ou Firefox
+                </button>
+              )}
               <button onClick={() => { copyPatternToClipboard(onExportPattern()); setShowExportMenu(false); }}>
                 Copier pattern
               </button>
@@ -545,13 +549,8 @@ const handleExportWav = async () => {
 
       {/* CONTEXTE */}
       <p className="premium-hero">
-        🎧 Votre morceau est en cours d’enregistrement
+        Exportez votre beat en qualité maximale
       </p>
-
-      {/* INFO AUDIO (🔥 important conservé) */}
-      <div className="premium-info">
-        ⏱️ Attendez la fin de la lecture pour un rendu optimal
-      </div>
 
       {/* FREE LIMIT */}
       <div className="premium-card">
@@ -592,25 +591,25 @@ const handleExportWav = async () => {
       {/* CTA */}
       <div className="premium-actions">
         <button
-          className="premium-btn secondary"
-          onClick={() => {
-            console.log('📊 [TRACK] free_export_accepted', { timestamp: new Date().toISOString() });
-            setShowPremiumModal(false);
-            executeExport();
-          }}
-        >
-          Continuer (limité — 20s)
-        </button>
-
-        <button
           className="premium-btn primary glow"
           onClick={() => {
-            console.log('📊 [TRACK] upgrade_cta_clicked', { timestamp: new Date().toISOString() });
+            track('upgrade_cta_clicked');
             setShowPremiumModal(false);
             setShowCheckout(true);
           }}
         >
           💎 Passer Premium
+        </button>
+
+        <button
+          className="premium-btn-skip"
+          onClick={() => {
+            track('free_export_accepted');
+            setShowPremiumModal(false);
+            executeExport();
+          }}
+        >
+          Continuer sans Premium (limité à 20s)
         </button>
       </div>
 
@@ -620,7 +619,7 @@ const handleExportWav = async () => {
       {showCheckout && (
         <FakeCheckoutModal
           onClose={() => {
-            console.log('📊 [TRACK] checkout_abandoned', { step: 'unknown', timestamp: new Date().toISOString() });
+            track('checkout_abandoned', { step: 'unknown' });
             setShowCheckout(false);
           }}
           onSuccess={() => {

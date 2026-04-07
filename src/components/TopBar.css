@@ -845,6 +845,22 @@ font-size: 9px;
   white-space: nowrap;
 }
 
+/* Bouton skip — discret, pas de style primary */
+.premium-btn-skip {
+  background: none;
+  border: none;
+  color: #55556a;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 6px 0;
+  text-align: center;
+  width: 100%;
+  transition: color 0.15s;
+}
+.premium-btn-skip:hover {
+  color: #9090b0;
+}
+
 .premium-badge-best {
   font-size: 10px;
   background: linear-gradient(135deg, #7c3aed, #a78bfa);

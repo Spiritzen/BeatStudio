@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import styles from './FakeCheckoutModal.module.css'
+import { track } from '../utils/track'
 
 interface Props {
   onClose: () => void
@@ -19,7 +20,7 @@ export const FakeCheckoutModal = ({ onClose, onSuccess }: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    console.log('📊 [TRACK] checkout_opened', { timestamp: new Date().toISOString() })
+    track('checkout_opened')
   }, [])
 
   const validateForm = () => {
@@ -38,20 +39,14 @@ export const FakeCheckoutModal = ({ onClose, onSuccess }: Props) => {
   const handlePayment = async () => {
     if (!validateForm()) return
 
-    console.log('📊 [TRACK] checkout_payment_submitted', {
-      email: form.email,
-      timestamp: new Date().toISOString(),
-    })
+    track('checkout_payment_submitted', { email: form.email })
 
     setLoading(true)
     await new Promise(r => setTimeout(r, 2000))
     setLoading(false)
     setStep('success')
 
-    console.log('📊 [TRACK] checkout_payment_success', {
-      email: form.email,
-      timestamp: new Date().toISOString(),
-    })
+    track('checkout_payment_success', { email: form.email })
 
     localStorage.setItem('premium', 'true')
     setTimeout(() => onSuccess(), 1500)
@@ -113,7 +108,7 @@ export const FakeCheckoutModal = ({ onClose, onSuccess }: Props) => {
           <button
             className={styles.ctaBtn}
             onClick={() => {
-              console.log('📊 [TRACK] checkout_pricing_accepted', { timestamp: new Date().toISOString() })
+              track('checkout_pricing_accepted')
               setStep('payment')
             }}
           >
