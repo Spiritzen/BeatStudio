@@ -1,78 +1,8 @@
 import * as Tone from 'tone';
 import type { Pattern } from '../types';
 import { encodeWav } from '../utils/encodeWav';
-import { isPremium } from '../store/premium';
 
 export type ExportStatus = 'recording' | 'encoding' | 'done' | 'error';
-
-/**
- * ⏱ LIMITATION AUDIO (FREE)
- */
-function limitAudioBuffer(buffer: AudioBuffer, maxSeconds: number): AudioBuffer {
-  const sampleRate = buffer.sampleRate;
-  const maxLength = Math.floor(sampleRate * maxSeconds);
-
-  if (buffer.length <= maxLength) return buffer;
-
-  const newBuffer = new AudioBuffer({
-    length: maxLength,
-    numberOfChannels: buffer.numberOfChannels,
-    sampleRate: sampleRate,
-  });
-
-  for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
-    const oldData = buffer.getChannelData(channel);
-    const newData = newBuffer.getChannelData(channel);
-    newData.set(oldData.subarray(0, maxLength));
-  }
-
-  return newBuffer;
-}
-
-/**
- * 🎧 FADE OUT (FREE)
- */
-function applyFadeOut(buffer: AudioBuffer, fadeSeconds: number): AudioBuffer {
-  const sampleRate = buffer.sampleRate;
-  const fadeSamples = Math.floor(sampleRate * fadeSeconds);
-
-  for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
-    const data = buffer.getChannelData(ch);
-    const start = data.length - fadeSamples;
-
-    for (let i = 0; i < fadeSamples; i++) {
-      const idx = start + i;
-      if (idx < data.length) {
-        const gain = 1 - i / fadeSamples;
-        data[idx] *= gain;
-      }
-    }
-  }
-
-  return buffer;
-}
-
-/**
- * 🔊 WATERMARK AUDIO (FREE)
- */
-function applyWatermark(buffer: AudioBuffer): AudioBuffer {
-  const sampleRate = buffer.sampleRate;
-  const interval = Math.floor(sampleRate * 4); // toutes les 4 sec
-
-  for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
-    const data = buffer.getChannelData(ch);
-
-    for (let i = 0; i < data.length; i += interval) {
-      for (let j = 0; j < 1500; j++) {
-        if (i + j < data.length) {
-          data[i + j] += Math.sin(j * 0.25) * 0.03;
-        }
-      }
-    }
-  }
-
-  return buffer;
-}
 
 /**
  * 🎵 EXPORT WAV
@@ -127,20 +57,8 @@ export async function exportWav(
           const arrayBuffer = await blob.arrayBuffer();
 
           const audioCtx = new AudioContext();
-          let audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
           audioCtx.close();
-
-          // 🔥 FREE MODE PROCESSING
-          if (!isPremium()) {
-            // 1. LIMIT
-            audioBuffer = limitAudioBuffer(audioBuffer, 20);
-
-            // 2. FADE OUT
-            audioBuffer = applyFadeOut(audioBuffer, 2);
-
-            // 3. WATERMARK
-            audioBuffer = applyWatermark(audioBuffer);
-          }
 
           const wavBlob = encodeWav(audioBuffer);
 

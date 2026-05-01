@@ -2,8 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import type { Pattern } from '../types';
 import { supabase } from '../lib/supabaseClient'
 import { exportJson, copyPatternToClipboard, exportWav } from '../hooks/useExport';
-import { isPremium } from '../store/premium';
-import { FakeCheckoutModal } from './FakeCheckoutModal';
 import { track } from '../utils/track';
 import { supportsMediaRecorder } from '../utils/browserSupport';
 import './TopBar.css';
@@ -63,10 +61,6 @@ export function TopBar({
   const [stepsInput, setStepsInput] = useState(String(globalSteps));
   const [editingName, setEditingName] = useState(false);
   const [localName, setLocalName] = useState(patternName);
-  const [showPremiumModal, setShowPremiumModal] = useState(false)
-  const [showCheckout, setShowCheckout] = useState(false)
-  const [userIsPremium, setUserIsPremium] = useState(isPremium())
-
   const commitName = () => {
     setEditingName(false);
     const trimmed = localName.trim() || patternName;
@@ -107,11 +101,6 @@ useEffect(() => {
     listener.subscription.unsubscribe()
   }
 }, [])
-
-const togglePremium = () => {
-  localStorage.setItem('premium', (!isPremium()).toString())
-  window.location.reload()
-}
 
 const handleLogout = async () => {
   await supabase.auth.signOut()
@@ -230,16 +219,7 @@ const executeExport = async () => {
 
 const handleExportWav = async () => {
   setShowExportMenu(false);
-
-  track('export_wav_clicked', { isPremium: isPremium(), patternName, bpm, globalSteps });
-
-  if (!isPremium()) {
-    track('premium_modal_opened');
-    setShowPremiumModal(true);
-    return;
-  }
-
-  track('wav_export_started_premium');
+  track('export_wav_clicked', { patternName, bpm, globalSteps });
   await executeExport();
 };
 
@@ -355,30 +335,6 @@ const handleExportWav = async () => {
           </span>
         )}
 
-        {/* 💎 Bouton Premium — point d'entrée conversion */}
-        {!userIsPremium ? (
-          <button
-            className="topbar-premium-btn"
-            onClick={() => {
-              track('topbar_premium_clicked');
-              setShowCheckout(true);
-            }}
-            title="Passer à BeatStudio Premium"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
-              <path d="M12 2L2 9l10 13L22 9z"/>
-            </svg>
-            Premium
-          </button>
-        ) : (
-          <div className="topbar-premium-active" title="BeatStudio Premium actif">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L2 9l10 13L22 9z"/>
-            </svg>
-            Premium
-          </div>
-        )}
-
         {/* Prefabs dropdown */}
         <div className="prefabs-wrap">
           <button
@@ -475,25 +431,6 @@ const handleExportWav = async () => {
             </div>
           )}
         </div>
-        {/* 💎 DEV ONLY */}
-        {!import.meta.env.PROD && (
-          <div
-            className="premium-badge"
-            style={{
-              fontSize: '11px',
-              color: '#f59e0b',
-              border: '1px dashed #f59e0b',
-              borderRadius: '4px',
-              padding: '2px 8px',
-              cursor: 'pointer',
-            }}
-            onClick={togglePremium}
-            title="DEV ONLY — Toggle Premium"
-          >
-            {isPremium() ? '💎 PREMIUM' : '🔓 FREE'} [dev]
-          </div>
-        )}
-
 {/* 👤 USER */}
 {user ? (
   <>
@@ -536,97 +473,6 @@ const handleExportWav = async () => {
             </div>
           </div>
         </div>
-      )}
-{showPremiumModal && (
-  <div className="premium-overlay" onClick={() => setShowPremiumModal(false)}>
-    <div className="premium-modal large" onClick={e => e.stopPropagation()}>
-
-      {/* HEADER */}
-      <div className="premium-header">
-        <span className="premium-icon">💎</span>
-        <h3>Export limité</h3>
-      </div>
-
-      {/* CONTEXTE */}
-      <p className="premium-hero">
-        Exportez votre beat en qualité maximale
-      </p>
-
-      {/* FREE LIMIT */}
-      <div className="premium-card">
-        <p>
-          Export WAV limité à <strong>20 secondes</strong>
-        </p>
-        <p className="premium-sub">
-          Fade out automatique inclus
-        </p>
-      </div>
-
-     <div className="premium-compare-horizontal">
-
-  {/* GRATUIT */}
-  <div className="premium-col free">
-    <h4>Gratuit</h4>
-    <ul>
-      <li>⏱️ 20 secondes</li>
-      <li>🔉 Qualité standard</li>
-    </ul>
-  </div>
-
-  {/* PREMIUM */}
-  <div className="premium-col premium">
-    <h4>
-  Premium
-  <span className="premium-badge-best">RECOMMANDÉ</span>
-</h4>
-    <ul>
-      <li>🎧 Export complet</li>
-      <li>🔥 Qualité maximale</li>
-      <li>🚀 Futurs packs audio</li>
-    </ul>
-  </div>
-
-</div>
-
-      {/* CTA */}
-      <div className="premium-actions">
-        <button
-          className="premium-btn primary glow"
-          onClick={() => {
-            track('upgrade_cta_clicked');
-            setShowPremiumModal(false);
-            setShowCheckout(true);
-          }}
-        >
-          💎 Passer Premium
-        </button>
-
-        <button
-          className="premium-btn-skip"
-          onClick={() => {
-            track('free_export_accepted');
-            setShowPremiumModal(false);
-            executeExport();
-          }}
-        >
-          Continuer sans Premium (limité à 20s)
-        </button>
-      </div>
-
-    </div>
-  </div>
-)}
-      {showCheckout && (
-        <FakeCheckoutModal
-          onClose={() => {
-            track('checkout_abandoned', { step: 'unknown' });
-            setShowCheckout(false);
-          }}
-          onSuccess={() => {
-            setShowCheckout(false);
-            setUserIsPremium(true);
-          }}
-        />
       )}
     </header>
   );
